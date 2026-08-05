@@ -30,6 +30,7 @@
             <li>The snippet is safe to include on every page — it will not load twice.</li>
             <li>Appearance and business hours apply automatically; there is nothing to change here after editing them.</li>
             <li>Turning the Live Chat module off hides the widget everywhere it is embedded.</li>
+            <li>The widget page must allow framing. If the launcher stays blank on an external site, remove any server-level <code>X-Frame-Options: SAMEORIGIN</code> rule for <code>/widget/*</code>.</li>
         </ul>
     </div>
 </div>

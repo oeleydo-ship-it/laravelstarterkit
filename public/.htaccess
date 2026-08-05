@@ -13,6 +13,13 @@
     RewriteCond %{HTTP:x-xsrf-token} .
     RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
 
+    # Chat widget must be embeddable on external customer sites.
+    <IfModule mod_headers.c>
+        SetEnvIf Request_URI "^/widget/" CHAT_WIDGET
+        Header always unset X-Frame-Options env=CHAT_WIDGET
+        Header always set Content-Security-Policy "frame-ancestors *" env=CHAT_WIDGET
+    </IfModule>
+
     # Redirect Trailing Slashes If Not A Folder...
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_URI} (.+)/$

@@ -72,6 +72,21 @@ class ChatWidgetEmbedTest extends TestCase
         $this->assertStringContainsString('__chatWidgetLoaded', $script);
     }
 
+    public function test_widget_pages_allow_cross_origin_framing(): void
+    {
+        $tenant = $this->makeTenant();
+
+        $this->get(route('chat.widget.show', $tenant->slug))
+            ->assertOk()
+            ->assertHeaderMissing('X-Frame-Options')
+            ->assertHeader('Content-Security-Policy', 'frame-ancestors *');
+
+        $this->get(route('chat.widget.embed', $tenant->slug))
+            ->assertOk()
+            ->assertHeaderMissing('X-Frame-Options')
+            ->assertHeader('Content-Security-Policy', 'frame-ancestors *');
+    }
+
     public function test_the_embed_script_only_accepts_resize_messages_from_this_app(): void
     {
         $tenant = $this->makeTenant();

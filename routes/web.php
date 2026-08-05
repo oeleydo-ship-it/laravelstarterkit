@@ -245,7 +245,11 @@ Route::middleware(['auth', \App\Http\Middleware\SetTenant::class])->group(functi
 */
 
 Route::prefix('widget/{tenantSlug}')
-    ->middleware(['throttle:60,1', \App\Http\Middleware\SetTenantFromSlug::class])
+    ->middleware([
+        'throttle:60,1',
+        \App\Http\Middleware\SetTenantFromSlug::class,
+        \App\Http\Middleware\AllowChatWidgetFraming::class,
+    ])
     ->name('chat.widget.')
     ->group(function () {
         Route::get('/', [ChatWidgetController::class, 'show'])->name('show');
