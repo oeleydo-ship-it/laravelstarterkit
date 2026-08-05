@@ -16,7 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // The chat widget is embedded on external visitor-facing sites and has
         // no Laravel session/CSRF token to send; it authenticates requests via
         // the visitor token instead.
-        $middleware->validateCsrfTokens(except: ['widget/*']);
+        $middleware->validateCsrfTokens(except: ['widget/*', 'x/*']);
 
         $middleware->alias([
             'privilege' => \App\Http\Middleware\EnsurePrivilege::class,

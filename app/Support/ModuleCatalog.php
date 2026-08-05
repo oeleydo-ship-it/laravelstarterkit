@@ -36,6 +36,12 @@ class ModuleCatalog
                 'description' => 'Lists, subscribers, templates, and campaigns with open/click tracking.',
                 'enabled_by_default' => false,
             ],
+            [
+                'key' => 'engage',
+                'name' => 'Engage',
+                'description' => 'White-label announcement bars, popups, lead forms, and on-site notifications.',
+                'enabled_by_default' => false,
+            ],
         ];
     }
 

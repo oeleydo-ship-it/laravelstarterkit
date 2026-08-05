@@ -11,6 +11,7 @@ use App\Models\EmailCampaign;
 use App\Models\EmailList;
 use App\Models\EmailSubscriber;
 use App\Models\EmailTemplate;
+use App\Models\EngageCampaign;
 use App\Models\Ticket;
 use App\Policies\ChatArticlePolicy;
 use App\Policies\ChatCannedResponsePolicy;
@@ -20,6 +21,7 @@ use App\Policies\EmailCampaignPolicy;
 use App\Policies\EmailListPolicy;
 use App\Policies\EmailSubscriberPolicy;
 use App\Policies\EmailTemplatePolicy;
+use App\Policies\EngageCampaignPolicy;
 use App\Policies\TicketPolicy;
 use App\Services\Chat\Ai\AiProvider;
 use App\Services\Chat\AiSettingsService;
@@ -58,6 +60,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(EmailSubscriber::class, EmailSubscriberPolicy::class);
         Gate::policy(EmailTemplate::class, EmailTemplatePolicy::class);
         Gate::policy(EmailCampaign::class, EmailCampaignPolicy::class);
+        Gate::policy(EngageCampaign::class, EngageCampaignPolicy::class);
 
         // Broadcasting auth: authenticated agents resolve normally; unauthenticated
         // widget visitors identify themselves via a `chat_visitor_token` param so

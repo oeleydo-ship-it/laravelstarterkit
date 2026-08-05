@@ -36,6 +36,11 @@ use App\Http\Controllers\EmailMarketing\SubscriberController as EmailSubscriberC
 use App\Http\Controllers\EmailMarketing\TemplateController as EmailTemplateController;
 use App\Http\Controllers\EmailMarketing\TrackingController as EmailTrackingController;
 use App\Http\Controllers\EmailMarketing\UnsubscribeController as EmailUnsubscribeController;
+use App\Http\Controllers\Engage\CampaignController as EngageCampaignController;
+use App\Http\Controllers\Engage\DashboardController as EngageDashboardController;
+use App\Http\Controllers\Engage\EmbedController as EngageEmbedController;
+use App\Http\Controllers\Engage\LeadController as EngageLeadController;
+use App\Http\Controllers\Engage\SettingsController as EngageSettingsController;
 use App\Models\Plan;
 
 /*
@@ -233,6 +238,18 @@ Route::middleware(['auth', \App\Http\Middleware\SetTenant::class])->group(functi
         Route::post('settings/test', [EmailSettingsController::class, 'sendTest'])->name('settings.test');
     });
 
+    // Engage Module
+    Route::middleware([\App\Http\Middleware\EnsureModuleEnabled::class . ':engage'])->prefix('engage')->name('engage.')->group(function () {
+        Route::get('/', [EngageDashboardController::class, 'index'])->name('dashboard');
+        Route::resource('campaigns', EngageCampaignController::class)->except(['show']);
+        Route::get('leads', [EngageLeadController::class, 'index'])->name('leads.index');
+        Route::get('leads/export', [EngageLeadController::class, 'export'])->name('leads.export');
+        Route::get('install', [EngageSettingsController::class, 'install'])->name('install');
+        Route::get('settings', [EngageSettingsController::class, 'index'])->name('settings');
+        Route::put('settings', [EngageSettingsController::class, 'update'])->name('settings.update');
+        Route::post('settings/rotate', [EngageSettingsController::class, 'rotateKey'])->name('settings.rotate');
+    });
+
     // ─── Profile ───
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -265,6 +282,34 @@ Route::prefix('widget/{tenantSlug}')
         Route::post('/conversations/{conversationId}/rating', [ChatWidgetController::class, 'rate'])->name('rating.store');
         Route::post('/conversations/{conversationId}/typing', [ChatWidgetController::class, 'typing'])->name('typing');
     });
+
+/*
+|--------------------------------------------------------------------------
+| White-label on-site embed (opaque /x/{siteKey})
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('x/{siteKey}')
+    ->middleware([
+        'throttle:120,1',
+        \App\Http\Middleware\SetTenantFromEngageSiteKey::class,
+        \App\Http\Middleware\AllowPublicFraming::class,
+    ])
+    ->where(['siteKey' => '[A-Za-z0-9]+'])
+    ->group(function () {
+        Route::options('{any?}', [EngageEmbedController::class, 'preflight'])->where('any', '.*');
+        Route::get('c', [EngageEmbedController::class, 'config']);
+        Route::post('e', [EngageEmbedController::class, 'event']);
+        Route::post('l', [EngageEmbedController::class, 'lead']);
+    });
+
+Route::get('/x/{siteKey}.js', [EngageEmbedController::class, 'boot'])
+    ->middleware([
+        'throttle:120,1',
+        \App\Http\Middleware\SetTenantFromEngageSiteKey::class,
+        \App\Http\Middleware\AllowPublicFraming::class,
+    ])
+    ->where(['siteKey' => '[A-Za-z0-9]+']);
 
 /*
 |--------------------------------------------------------------------------

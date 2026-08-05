@@ -12,6 +12,8 @@ class Privileges
     public const CHAT_MANAGE = 'chat.manage';
     public const EMAIL_VIEW = 'email.view';
     public const EMAIL_MANAGE = 'email.manage';
+    public const ENGAGE_VIEW = 'engage.view';
+    public const ENGAGE_MANAGE = 'engage.manage';
     public const TEAM_MANAGE = 'team.manage';
     public const MODULES_MANAGE = 'modules.manage';
     public const BILLING_MANAGE = 'billing.manage';
@@ -28,6 +30,8 @@ class Privileges
             self::CHAT_MANAGE => 'Manage live chat settings',
             self::EMAIL_VIEW => 'View email marketing',
             self::EMAIL_MANAGE => 'Manage email marketing',
+            self::ENGAGE_VIEW => 'View engage campaigns',
+            self::ENGAGE_MANAGE => 'Manage engage campaigns',
             self::TEAM_MANAGE => 'Manage team & groups',
             self::MODULES_MANAGE => 'Manage modules',
             self::BILLING_MANAGE => 'Manage billing',
@@ -47,6 +51,7 @@ class Privileges
             'Tickets' => [self::TICKETS_VIEW, self::TICKETS_MANAGE],
             'Live Chat' => [self::CHAT_AGENT, self::CHAT_MANAGE],
             'Email Marketing' => [self::EMAIL_VIEW, self::EMAIL_MANAGE],
+            'Engage' => [self::ENGAGE_VIEW, self::ENGAGE_MANAGE],
             'Workspace' => [self::TEAM_MANAGE, self::MODULES_MANAGE, self::BILLING_MANAGE, self::SETTINGS_MANAGE],
         ];
     }
@@ -61,6 +66,7 @@ class Privileges
                 self::TICKETS_VIEW,
                 self::CHAT_AGENT,
                 self::EMAIL_VIEW,
+                self::ENGAGE_VIEW,
             ],
             default => [],
         };

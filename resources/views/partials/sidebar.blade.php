@@ -27,7 +27,8 @@
         @if(($tenant->isModuleEnabled('clients') && auth()->user()->canAccessModule('clients'))
             || ($tenant->isModuleEnabled('tickets') && auth()->user()->canAccessModule('tickets'))
             || ($tenant->isModuleEnabled('chat') && auth()->user()->canAccessModule('chat'))
-            || ($tenant->isModuleEnabled('email') && auth()->user()->canAccessModule('email')))
+            || ($tenant->isModuleEnabled('email') && auth()->user()->canAccessModule('email'))
+            || ($tenant->isModuleEnabled('engage') && auth()->user()->canAccessModule('engage')))
             <div class="nav-section">
                 <div class="nav-section-title">Modules</div>
 
@@ -72,6 +73,17 @@
                             <polyline points="22,6 12,13 2,6" />
                         </svg>
                         Email Marketing
+                    </a>
+                @endif
+
+                @if($tenant->isModuleEnabled('engage') && auth()->user()->canAccessModule('engage'))
+                    <a href="{{ route('engage.dashboard') }}"
+                        class="nav-link {{ request()->routeIs('engage.*') ? 'active' : '' }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                        </svg>
+                        Engage
                     </a>
                 @endif
             </div>
