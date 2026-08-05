@@ -4,14 +4,33 @@ namespace App\Http\Controllers;
 
 use App\Models\Module;
 use App\Models\TenantModule;
+use App\Support\ModuleCatalog;
 use Illuminate\Http\Request;
 
 class ModuleController extends Controller
 {
     public function index()
     {
+        // Ensure catalog modules exist even if production never re-ran seeders.
+        ModuleCatalog::sync();
+
         $tenant = currentTenant();
-        $modules = Module::all();
+        $modules = Module::query()->orderBy('name')->get();
+        $tenantModules = $tenant->tenantModules()->pluck('enabled', 'module_key');
+
+        // Create missing tenant_module rows so toggles have a stable baseline.
+        foreach ($modules as $module) {
+            if (! $tenantModules->has($module->key)) {
+                TenantModule::firstOrCreate(
+                    [
+                        'tenant_id' => $tenant->id,
+                        'module_key' => $module->key,
+                    ],
+                    ['enabled' => (bool) $module->enabled_by_default]
+                );
+            }
+        }
+
         $tenantModules = $tenant->tenantModules()->pluck('enabled', 'module_key');
 
         return view('modules.index', compact('modules', 'tenantModules'));
@@ -19,6 +38,8 @@ class ModuleController extends Controller
 
     public function toggle(Request $request)
     {
+        ModuleCatalog::sync();
+
         $request->validate([
             'module_key' => 'required|string|exists:modules,key',
             'enabled' => 'required|boolean',

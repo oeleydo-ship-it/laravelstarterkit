@@ -8,6 +8,12 @@
     <p class="text-muted">Enable or disable modules for your workspace.</p>
 </div>
 
+@if($modules->isEmpty())
+    <div class="alert alert-warning">
+        No modules are registered yet. Run <code>php artisan migrate</code> or
+        <code>php artisan db:seed --class=ModuleSeeder</code> on the server, then refresh this page.
+    </div>
+@else
 <div class="row g-4">
     @foreach($modules as $module)
     <div class="col-md-6">
@@ -22,7 +28,7 @@
                     <form method="POST" action="{{ route('modules.toggle') }}">
                         @csrf
                         <input type="hidden" name="module_key" value="{{ $module->key }}">
-                        @php $isEnabled = $tenantModules[$module->key] ?? false; @endphp
+                        @php $isEnabled = (bool) ($tenantModules[$module->key] ?? false); @endphp
 
                         <div class="form-check form-switch">
                             <input type="hidden" name="enabled" value="{{ $isEnabled ? '0' : '1' }}">
@@ -46,4 +52,5 @@
     </div>
     @endforeach
 </div>
+@endif
 @endsection
