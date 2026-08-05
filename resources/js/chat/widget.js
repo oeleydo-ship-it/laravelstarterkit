@@ -607,8 +607,12 @@ if (root) {
 
             setAssignee(data.assignee_name || null);
 
-            loadMessages({ reset: true });
-            subscribe();
+            // Await history load before resolving. A fire-and-forget reset was
+            // wiping the visitor's first message when they sent it immediately
+            // after start (appendMessage → loadMessages reset → empty thread).
+            return loadMessages({ reset: true }).then(() => {
+                subscribe();
+            });
         });
     };
 
@@ -798,13 +802,26 @@ if (root) {
         const send = () => {
             if (!conversationId) return;
 
+            // Composer is also shown on the help-center home; always jump to the
+            // conversation view before appending so the reply is not hidden.
+            if (currentView !== 'chat') {
+                showView('chat');
+            }
+
+            const pendingBody = body;
             input.value = '';
+            input.disabled = true;
+
+            const finish = () => {
+                input.disabled = false;
+                input.focus();
+            };
 
             if (file) {
                 const payload = new FormData();
                 payload.append('file', file);
                 payload.append('visitor_token', visitorToken);
-                if (body) payload.append('caption', body);
+                if (pendingBody) payload.append('caption', pendingBody);
 
                 axios.post(`${base}/conversations/${conversationId}/attachments`, payload)
                     .then(({ data }) => {
@@ -813,26 +830,33 @@ if (root) {
                         fileName.textContent = '';
                     })
                     .catch((error) => {
+                        input.value = pendingBody;
                         fileName.textContent = error.response?.data?.errors?.file?.[0]
                             || 'That file could not be sent.';
-                    });
+                    })
+                    .finally(finish);
 
                 return;
             }
 
             axios.post(`${base}/conversations/${conversationId}/messages`, {
-                body,
+                body: pendingBody,
                 visitor_token: visitorToken,
             }).then(({ data }) => {
                 appendMessage(data);
                 if (data.bot_reply) {
                     appendMessage(data.bot_reply);
                 }
-            });
+            }).catch(() => {
+                // Restore so a failed send does not look like the message vanished.
+                input.value = pendingBody;
+            }).finally(finish);
         };
 
         if (!conversationId) {
-            enterChat().then(send);
+            enterChat().then(send).catch(() => {
+                // Keep the draft if chat could not start.
+            });
             return;
         }
 
