@@ -55,6 +55,7 @@ if (root) {
     let visitorToken = localStorage.getItem(storageKey) || null;
     let conversationId = null;
     let echo = null;
+    let echoConnected = false;
     let rating = null;
     let unreadCount = 0;
     let unreadStorageKey = null;
@@ -477,17 +478,34 @@ if (root) {
         }).catch(() => {});
     };
 
-    const startPolling = () => {
+    const stopPolling = () => {
         if (pollTimer) {
-            return;
+            window.clearTimeout(pollTimer);
+            pollTimer = null;
         }
+    };
 
-        pollTimer = window.setInterval(() => {
-            loadMessages({ notifyNew: true });
-        }, 2500);
+    // Polling is the reliable path when the host page throttles the tiny closed
+    // iframe or when the websocket proxy is misconfigured. Never depend on Echo
+    // succeeding before this starts.
+    const startPolling = () => {
+        stopPolling();
+
+        const tick = () => {
+            loadMessages({ notifyNew: true }).finally(() => {
+                // Faster while waiting on websockets; ease off once Echo is live.
+                const delay = echoConnected ? 4000 : 1500;
+                pollTimer = window.setTimeout(tick, delay);
+            });
+        };
+
+        tick();
     };
 
     const subscribe = () => {
+        // Fetch agent replies even if Echo fails to construct or connect.
+        startPolling();
+
         if (echo) {
             try {
                 echo.disconnect();
@@ -497,23 +515,42 @@ if (root) {
             echo = null;
         }
 
-        echo = new Echo(reverbEchoOptions({
-            // `endpoint` is required here. Supplying channelAuthorization at all
-            // makes pusher-js ignore the legacy `authEndpoint`, and its own
-            // default is /pusher/auth — which this app does not serve, so the
-            // subscription silently 404s and the visitor never receives replies.
-            channelAuthorization: {
-                endpoint: `${base}/broadcasting/auth`,
-                // Same param name as every other widget endpoint — the auth
-                // route runs the identical ownership check on it.
-                params: { visitor_token: visitorToken },
-            },
-        }));
+        echoConnected = false;
+
+        try {
+            echo = new Echo(reverbEchoOptions({
+                // `endpoint` is required here. Supplying channelAuthorization at all
+                // makes pusher-js ignore the legacy `authEndpoint`, and its own
+                // default is /pusher/auth — which this app does not serve, so the
+                // subscription silently 404s and the visitor never receives replies.
+                channelAuthorization: {
+                    endpoint: `${base}/broadcasting/auth`,
+                    // Same param name as every other widget endpoint — the auth
+                    // route runs the identical ownership check on it.
+                    params: { visitor_token: visitorToken },
+                },
+            }));
+        } catch {
+            return;
+        }
 
         // Lets broadcast(...)->toOthers() skip this tab, the same way the agent
         // side does in bootstrap.js.
         echo.connector.pusher.connection.bind('connected', () => {
+            echoConnected = true;
             axios.defaults.headers.common['X-Socket-Id'] = echo.socketId();
+            // Catch anything missed while the socket was down.
+            loadMessages({ notifyNew: true });
+        });
+
+        echo.connector.pusher.connection.bind('disconnected', () => {
+            echoConnected = false;
+            delete axios.defaults.headers.common['X-Socket-Id'];
+            loadMessages({ notifyNew: true });
+        });
+
+        echo.connector.pusher.connection.bind('unavailable', () => {
+            echoConnected = false;
         });
 
         echo.private(`tenant.${root.dataset.tenantId}.conversation.${conversationId}`)
@@ -559,10 +596,6 @@ if (root) {
                     }, 3000);
                 }
             });
-
-        // Fallback so agent replies still appear without a full page refresh
-        // even if the websocket connection is flaky.
-        startPolling();
     };
 
     const pageContext = () => {
@@ -711,6 +744,9 @@ if (root) {
     const openPanel = () => {
         setPanelOpen(true);
         if (currentView === 'chat' && conversationId) {
+            // Closed iframes get aggressive timer throttling — pull anything the
+            // poll may have missed the moment the visitor opens the panel again.
+            loadMessages({ notifyNew: true });
             markConversationRead();
             return;
         }
@@ -866,6 +902,20 @@ if (root) {
         typingTimer = setTimeout(() => {
             typingTimer = null;
         }, 2000);
+    });
+
+    // Host pages keep the iframe at 96×96 while collapsed; browsers throttle
+    // timers in that state. Pull fresh messages whenever the visitor comes back.
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && conversationId) {
+            loadMessages({ notifyNew: true });
+        }
+    });
+
+    window.addEventListener('focus', () => {
+        if (conversationId) {
+            loadMessages({ notifyNew: true });
+        }
     });
 }
 

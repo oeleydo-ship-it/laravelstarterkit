@@ -27,6 +27,7 @@ export function reverbEchoOptions(overrides = {}) {
         wssPort: port,
         forceTLS,
         enabledTransports: ['ws', 'wss'],
+        disableStats: true,
         ...overrides,
     };
 }

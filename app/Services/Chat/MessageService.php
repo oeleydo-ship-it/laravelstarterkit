@@ -98,7 +98,15 @@ class MessageService
             'last_message_preview' => str($body)->limit(140),
         ]);
 
-        broadcast(new ChatMessageSent($message))->toOthers();
+        // Agent/bot replies must reach the visitor widget. Using toOthers() here
+        // is unsafe when the agent's Echo socket id is missing or stale — the
+        // visitor is the audience that needs the event. Agent UIs already append
+        // from the HTTP response and dedupe by message id.
+        if ($senderType === 'visitor') {
+            broadcast(new ChatMessageSent($message))->toOthers();
+        } else {
+            broadcast(new ChatMessageSent($message));
+        }
 
         // Inbox / sidebar listen on the tenant channel — keep previews and order
         // live without requiring a refresh.
