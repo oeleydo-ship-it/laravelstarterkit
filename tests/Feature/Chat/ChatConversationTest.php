@@ -40,7 +40,7 @@ class ChatConversationTest extends TestCase
         ]);
     }
 
-    protected function makeConversation(Tenant $tenant): ChatConversation
+    protected function makeConversation(Tenant $tenant, ?User $assignee = null): ChatConversation
     {
         $visitor = ChatVisitor::create(['tenant_id' => $tenant->id]);
 
@@ -48,6 +48,7 @@ class ChatConversationTest extends TestCase
             'tenant_id' => $tenant->id,
             'chat_visitor_id' => $visitor->id,
             'status' => 'open',
+            'assigned_to' => $assignee?->id,
         ]);
     }
 
@@ -60,7 +61,25 @@ class ChatConversationTest extends TestCase
         $this->actingAs($user)
             ->get(route('chat.conversations.index'))
             ->assertOk()
-            ->assertSee('Live Chat Inbox');
+            ->assertSee('Live Chat');
+    }
+
+    public function test_inbox_json_feed_returns_conversations(): void
+    {
+        $tenant = $this->makeTenant();
+        $user = $this->makeUser($tenant);
+        $conversation = $this->makeConversation($tenant, $user);
+        $conversation->update([
+            'last_message_preview' => 'Hello from visitor',
+            'last_message_at' => now(),
+        ]);
+
+        $this->actingAs($user)
+            ->getJson(route('chat.conversations.index'))
+            ->assertOk()
+            ->assertJsonPath('data.0.id', $conversation->id)
+            ->assertJsonPath('data.0.last_message_preview', 'Hello from visitor')
+            ->assertJsonPath('data.0.visitor_label', 'Visitor #'.$conversation->chat_visitor_id);
     }
 
     public function test_agent_cannot_view_another_tenants_conversation(): void
@@ -93,11 +112,11 @@ class ChatConversationTest extends TestCase
 
     public function test_agent_can_send_a_message_and_it_broadcasts(): void
     {
-        Event::fake([ChatMessageSent::class]);
+        Event::fake([ChatMessageSent::class, ChatConversationUpdated::class]);
 
         $tenant = $this->makeTenant();
         $user = $this->makeUser($tenant);
-        $conversation = $this->makeConversation($tenant);
+        $conversation = $this->makeConversation($tenant, $user);
 
         $this->actingAs($user)
             ->postJson(route('chat.conversations.messages.store', $conversation), ['body' => 'Hi there'])
@@ -115,6 +134,14 @@ class ChatConversationTest extends TestCase
         Event::assertDispatched(ChatMessageSent::class, function (ChatMessageSent $event) use ($conversation) {
             return $event->message->chat_conversation_id === $conversation->id
                 && $event->broadcastOn()[0]->name === "private-tenant.{$conversation->tenant_id}.conversation.{$conversation->id}";
+        });
+
+        Event::assertDispatched(ChatConversationUpdated::class, function (ChatConversationUpdated $event) use ($conversation) {
+            $channels = collect($event->broadcastOn())->map->name;
+
+            return $event->conversation->id === $conversation->id
+                && $channels->contains("private-tenant.{$conversation->tenant_id}.conversation.{$conversation->id}")
+                && $channels->contains("private-tenant.{$conversation->tenant_id}.inbox");
         });
     }
 

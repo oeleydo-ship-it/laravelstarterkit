@@ -47,6 +47,11 @@ class ConversationService
             'assigned_to' => $agent?->id,
         ]);
 
+        $conversation->setRelation('assignee', $agent);
+        $conversation->setRelation('visitor', $visitor);
+
+        broadcast(new ChatConversationUpdated($conversation));
+
         $this->notifier->conversationStarted($conversation);
 
         return $conversation;

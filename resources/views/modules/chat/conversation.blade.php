@@ -14,19 +14,28 @@
 @section('content')
 <div class="chat-workspace">
     {{-- Left: people who messaged --}}
-    <aside class="chat-workspace__people" aria-label="Conversations">
+    <aside class="chat-workspace__people"
+           aria-label="Conversations"
+           data-chat-inbox
+           data-variant="sidebar"
+           data-tenant-id="{{ currentTenant()->id }}"
+           data-current-user-id="{{ auth()->id() }}"
+           data-active-id="{{ $conversation->id }}"
+           data-feed-url="{{ route('chat.conversations.index') }}"
+           data-empty-text="No open chats yet.">
         <div class="chat-workspace__people-head">
             <h2>Inbox</h2>
             <a href="{{ route('chat.conversations.index') }}" class="chat-workspace__people-all">All</a>
         </div>
-        <div class="chat-workspace__people-list">
+        <div class="chat-workspace__people-list" data-chat-inbox-list>
             @forelse($sidebarConversations as $item)
                 @php
                     $itemLabel = $item->visitor?->displayName() ?? ('Visitor #'.$item->chat_visitor_id);
                     $isActive = (int) $item->id === (int) $conversation->id;
                 @endphp
                 <a href="{{ route('chat.conversations.show', $item) }}"
-                   class="chat-workspace__person {{ $isActive ? 'is-active' : '' }}">
+                   class="chat-workspace__person {{ $isActive ? 'is-active' : '' }}"
+                   data-conversation-id="{{ $item->id }}">
                     <div class="chat-workspace__avatar" aria-hidden="true">
                         {{ strtoupper(substr($itemLabel, 0, 1)) }}
                     </div>
@@ -408,5 +417,5 @@
     </aside>
 </div>
 
-@vite('resources/js/chat/inbox.js')
+@vite(['resources/js/chat/inbox.js', 'resources/js/chat/list.js'])
 @endsection

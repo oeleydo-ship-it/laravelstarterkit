@@ -8,6 +8,7 @@ export default defineConfig({
                 'resources/sass/app.scss',
                 'resources/js/app.js',
                 'resources/js/chat/inbox.js',
+                'resources/js/chat/list.js',
                 'resources/js/chat/presence.js',
                 'resources/js/chat/widget.js',
             ],

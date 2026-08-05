@@ -2,6 +2,7 @@
 
 namespace App\Services\Chat;
 
+use App\Events\ChatConversationUpdated;
 use App\Events\ChatInternalNoteAdded;
 use App\Events\ChatMessageSent;
 use App\Models\ChatAttachment;
@@ -98,6 +99,10 @@ class MessageService
         ]);
 
         broadcast(new ChatMessageSent($message))->toOthers();
+
+        // Inbox / sidebar listen on the tenant channel — keep previews and order
+        // live without requiring a refresh.
+        broadcast(new ChatConversationUpdated($conversation->fresh(['visitor', 'assignee'])));
 
         $this->notifier->messageSent($message);
 

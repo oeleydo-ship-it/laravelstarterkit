@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Services\Chat\AiAssistService;
 use App\Services\Chat\ConversationService;
 use App\Services\Chat\VisitorCrmSyncService;
+use App\Support\ChatInboxPayload;
 use App\Support\LikeSearch;
 use Illuminate\Http\Request;
 
@@ -61,6 +62,14 @@ class ConversationController extends Controller
         }]);
 
         $conversations = $query->orderByDesc('last_message_at')->paginate(20);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'data' => $conversations->getCollection()
+                    ->map(fn (ChatConversation $conversation) => ChatInboxPayload::from($conversation, $request->user()))
+                    ->values(),
+            ]);
+        }
 
         return view('modules.chat.inbox', [
             'conversations' => $conversations,

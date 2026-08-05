@@ -3,7 +3,15 @@
 @section('title', 'Live Chat')
 
 @section('content')
-<div class="chat-inbox">
+<div class="chat-inbox"
+     data-chat-inbox
+     data-variant="inbox"
+     data-tenant-id="{{ currentTenant()->id }}"
+     data-current-user-id="{{ auth()->id() }}"
+     data-status="{{ request('status') }}"
+     data-filter="{{ request('filter') }}"
+     data-feed-url="{{ route('chat.conversations.index', request()->query()) }}"
+     data-empty-text="{{ filled($search) ? 'No conversations match that search.' : 'No conversations yet.' }}">
     <div class="chat-inbox__header">
         <div>
             <h1 class="chat-inbox__title">Live Chat</h1>
@@ -67,7 +75,7 @@
         @endif
     </form>
 
-    <div class="chat-inbox__list">
+    <div class="chat-inbox__list" data-chat-inbox-list>
         @forelse($conversations as $conversation)
             @php
                 $visitorLabel = $conversation->visitor->name
@@ -75,7 +83,7 @@
                     ?? 'Visitor #'.$conversation->chat_visitor_id;
                 $isMine = (int) $conversation->assigned_to === (int) auth()->id();
             @endphp
-            <a href="{{ route('chat.conversations.show', $conversation) }}" class="chat-inbox__row">
+            <a href="{{ route('chat.conversations.show', $conversation) }}" class="chat-inbox__row" data-conversation-id="{{ $conversation->id }}">
                 <div class="chat-inbox__row-main">
                     <div class="chat-inbox__visitor">
                         <strong>{{ $visitorLabel }}</strong>
@@ -116,5 +124,5 @@
     </div>
 </div>
 
-@vite('resources/js/chat/presence.js')
+@vite(['resources/js/chat/presence.js', 'resources/js/chat/list.js'])
 @endsection

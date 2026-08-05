@@ -3,6 +3,7 @@
 namespace App\Events;
 
 use App\Models\ChatConversation;
+use App\Support\ChatInboxPayload;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
@@ -20,8 +21,13 @@ class ChatConversationUpdated implements ShouldBroadcastNow
     public function broadcastOn(): array
     {
         return [
+            // Thread page + widget
             new PrivateChannel(
                 "tenant.{$this->conversation->tenant_id}.conversation.{$this->conversation->id}"
+            ),
+            // Agent inbox / sidebar list
+            new PrivateChannel(
+                "tenant.{$this->conversation->tenant_id}.inbox"
             ),
         ];
     }
@@ -33,17 +39,6 @@ class ChatConversationUpdated implements ShouldBroadcastNow
 
     public function broadcastWith(): array
     {
-        $conversation = $this->conversation->loadMissing('assignee');
-
-        return [
-            'id' => $conversation->id,
-            'status' => $conversation->status,
-            'assigned_to' => $conversation->assigned_to,
-            'assignee_name' => $conversation->assignee?->name,
-            'rating' => $conversation->rating,
-            // Lets the widget stop asking once a score is in, including in a
-            // second tab the visitor left open.
-            'is_rated' => $conversation->isRated(),
-        ];
+        return ChatInboxPayload::from($this->conversation);
     }
 }

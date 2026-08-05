@@ -56,3 +56,10 @@ Broadcast::channel('tenant.{tenantId}.agents', function ($user, $tenantId) {
         'availability' => $user->chat_availability,
     ];
 });
+
+/**
+ * Live conversation list for agents on the inbox / sidebar. Visitors never join.
+ */
+Broadcast::channel('tenant.{tenantId}.inbox', function ($user, $tenantId) {
+    return $user instanceof User && (int) $user->tenant_id === (int) $tenantId;
+});
