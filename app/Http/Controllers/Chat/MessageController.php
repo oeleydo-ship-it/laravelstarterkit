@@ -15,6 +15,47 @@ class MessageController extends Controller
     {
     }
 
+    public function index(ChatConversation $conversation)
+    {
+        $this->authorize('view', $conversation);
+
+        $messages = $conversation->messages()
+            ->with(['sender', 'attachment'])
+            ->orderBy('id')
+            ->get()
+            ->map(function ($message) {
+                if ($message->is_internal) {
+                    return [
+                        'id' => $message->id,
+                        'type' => 'note',
+                        'author_name' => $message->sender?->name ?? 'Agent',
+                        'body' => $message->body,
+                        'created_at' => $message->created_at?->toIso8601String(),
+                    ];
+                }
+
+                return [
+                    'id' => $message->id,
+                    'type' => 'message',
+                    'sender_type' => $message->sender_type,
+                    'sender_name' => match ($message->sender_type) {
+                        'bot' => 'Assistant',
+                        'agent' => $message->sender?->name ?? 'Support',
+                        default => 'Visitor',
+                    },
+                    'body' => $message->body,
+                    'attachment' => $message->attachment?->toPayload(),
+                    'download_url' => $message->attachment
+                        ? route('chat.attachments.download', $message->attachment)
+                        : null,
+                    'created_at' => $message->created_at?->toIso8601String(),
+                ];
+            })
+            ->values();
+
+        return response()->json(['data' => $messages]);
+    }
+
     public function store(SendChatMessageRequest $request, ChatConversation $conversation)
     {
         $this->authorize('reply', $conversation);

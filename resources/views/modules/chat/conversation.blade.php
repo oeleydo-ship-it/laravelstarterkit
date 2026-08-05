@@ -163,6 +163,7 @@
                      data-conversation-id="{{ $conversation->id }}"
                      data-can-reply="{{ $canReply ? '1' : '0' }}"
                      data-send-url="{{ route('chat.conversations.messages.store', $conversation) }}"
+                     data-messages-url="{{ route('chat.conversations.messages.index', $conversation) }}"
                      data-read-url="{{ route('chat.conversations.read', $conversation) }}"
                      data-typing-url="{{ route('chat.conversations.typing', $conversation) }}"
                      data-note-url="{{ route('chat.conversations.notes.store', $conversation) }}"

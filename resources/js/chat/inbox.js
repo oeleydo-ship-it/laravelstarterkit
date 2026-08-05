@@ -4,6 +4,7 @@ if (thread) {
     const tenantId = thread.dataset.tenantId;
     const conversationId = thread.dataset.conversationId;
     const sendUrl = thread.dataset.sendUrl;
+    const messagesUrl = thread.dataset.messagesUrl;
     const readUrl = thread.dataset.readUrl;
     const typingUrl = thread.dataset.typingUrl;
     const noteUrl = thread.dataset.noteUrl;
@@ -32,6 +33,7 @@ if (thread) {
     };
 
     const appendMessage = ({
+        id,
         sender_type: senderType,
         sender_name: senderName,
         body,
@@ -39,8 +41,15 @@ if (thread) {
         download_url: downloadUrl,
         created_at: createdAt,
     }) => {
+        if (id != null && thread.querySelector(`[data-id="${id}"]`)) {
+            return false;
+        }
+
         const el = document.createElement('div');
         el.className = `chat-message chat-message-${senderType}`;
+        if (id != null) {
+            el.dataset.id = String(id);
+        }
 
         const time = new Date(createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         const name = senderName
@@ -68,11 +77,20 @@ if (thread) {
 
         thread.appendChild(el);
         scrollToBottom();
+
+        return true;
     };
 
-    const appendNote = ({ author_name: author, body, created_at: createdAt }) => {
+    const appendNote = ({ id, author_name: author, body, created_at: createdAt }) => {
+        if (id != null && thread.querySelector(`[data-id="${id}"]`)) {
+            return false;
+        }
+
         const el = document.createElement('div');
         el.className = 'chat-message chat-message-internal';
+        if (id != null) {
+            el.dataset.id = String(id);
+        }
 
         const time = new Date(createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -88,6 +106,8 @@ if (thread) {
 
         thread.appendChild(el);
         scrollToBottom();
+
+        return true;
     };
 
     // Reply vs internal note. Notes go to a different endpoint and a different
@@ -161,6 +181,30 @@ if (thread) {
     // Separate agent-only channel — the visitor is not authorized to join it.
     window.Echo.private(`tenant.${tenantId}.conversation.${conversationId}.internal`)
         .listen('.note.added', (data) => appendNote(data));
+
+    // Polling fallback when websocket/auth/proxy is misconfigured in production.
+    // Dedupes by data-id so Echo + poll can both run safely.
+    if (messagesUrl) {
+        const pollMessages = () => {
+            axios.get(messagesUrl)
+                .then(({ data }) => {
+                    let added = false;
+                    (data.data || []).forEach((item) => {
+                        if (item.type === 'note') {
+                            added = appendNote(item) || added;
+                        } else {
+                            added = appendMessage(item) || added;
+                        }
+                    });
+                    if (added) {
+                        axios.post(readUrl).catch(() => {});
+                    }
+                })
+                .catch(() => {});
+        };
+
+        window.setInterval(pollMessages, 3000);
+    }
 
     // ─── Knowledge base lookup ───
 
@@ -290,6 +334,7 @@ if (thread) {
 
             axios.post(sendUrl, { body }).then(({ data }) => {
                 appendMessage({
+                    id: data.id,
                     sender_type: 'agent',
                     sender_name: data.sender?.name,
                     body: data.body,

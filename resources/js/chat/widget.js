@@ -1,6 +1,7 @@
 import axios from 'axios';
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
+import { reverbEchoOptions } from './realtime';
 
 window.Pusher = Pusher;
 
@@ -496,14 +497,7 @@ if (root) {
             echo = null;
         }
 
-        echo = new Echo({
-            broadcaster: 'reverb',
-            key: import.meta.env.VITE_REVERB_APP_KEY,
-            wsHost: import.meta.env.VITE_REVERB_HOST,
-            wsPort: import.meta.env.VITE_REVERB_PORT ?? 80,
-            wssPort: import.meta.env.VITE_REVERB_PORT ?? 443,
-            forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
-            enabledTransports: ['ws', 'wss'],
+        echo = new Echo(reverbEchoOptions({
             // `endpoint` is required here. Supplying channelAuthorization at all
             // makes pusher-js ignore the legacy `authEndpoint`, and its own
             // default is /pusher/auth — which this app does not serve, so the
@@ -514,7 +508,7 @@ if (root) {
                 // route runs the identical ownership check on it.
                 params: { visitor_token: visitorToken },
             },
-        });
+        }));
 
         // Lets broadcast(...)->toOthers() skip this tab, the same way the agent
         // side does in bootstrap.js.

@@ -36,10 +36,20 @@ return [
             'secret' => env('REVERB_APP_SECRET'),
             'app_id' => env('REVERB_APP_ID'),
             'options' => [
-                'host' => env('REVERB_HOST'),
-                'port' => env('REVERB_PORT', 443),
-                'scheme' => env('REVERB_SCHEME', 'https'),
-                'useTLS' => env('REVERB_SCHEME', 'https') === 'https',
+                // Publish events straight to the local Reverb process. Browsers
+                // still connect via the public client host/port (usually :443
+                // through nginx). Using the public HTTPS host here often fails
+                // when /apps is not proxied, so agents never receive live events.
+                'host' => env('REVERB_BACKEND_HOST', '127.0.0.1'),
+                'port' => env('REVERB_BACKEND_PORT', env('REVERB_SERVER_PORT', 8080)),
+                'scheme' => env('REVERB_BACKEND_SCHEME', 'http'),
+                'useTLS' => env('REVERB_BACKEND_SCHEME', 'http') === 'https',
+            ],
+            // Browser Echo settings (also exposed as window.ChatRealtime).
+            'client' => [
+                'host' => env('REVERB_CLIENT_HOST', env('REVERB_HOST', 'localhost')),
+                'port' => env('REVERB_CLIENT_PORT', env('REVERB_PORT', 8080)),
+                'scheme' => env('REVERB_CLIENT_SCHEME', env('REVERB_SCHEME', 'http')),
             ],
             'client_options' => [
                 // Guzzle client options: https://docs.guzzlephp.org/en/stable/request-options.html

@@ -5,6 +5,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Chat with {{ $appearance['title'] }}</title>
+    <script>
+        window.ChatRealtime = @json(\App\Support\RealtimeConfig::forBrowser());
+    </script>
     @vite(['resources/sass/app.scss', 'resources/js/chat/widget.js'])
     {{-- Validated as a six-digit hex by UpdateChatAppearanceRequest before it
          ever reaches this stylesheet. --}}

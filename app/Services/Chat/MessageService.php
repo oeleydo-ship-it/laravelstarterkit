@@ -90,6 +90,8 @@ class MessageService
             $message->load('attachment');
         }
 
+        $message->loadMissing('sender');
+
         $conversation->update([
             'last_message_at' => $message->created_at,
             'last_message_preview' => str($body)->limit(140),

@@ -164,6 +164,7 @@ Route::middleware(['auth', \App\Http\Middleware\SetTenant::class])->group(functi
         Route::resource('conversations', ChatConversationController::class)->only(['index', 'show', 'update', 'destroy']);
         Route::put('conversations/{conversation}/visitor', [ChatConversationController::class, 'updateVisitor'])->name('conversations.visitor.update');
         Route::post('conversations/{conversation}/messages', [ChatMessageController::class, 'store'])->name('conversations.messages.store');
+        Route::get('conversations/{conversation}/messages', [ChatMessageController::class, 'index'])->name('conversations.messages.index');
         Route::post('conversations/{conversation}/notes', [ChatMessageController::class, 'note'])->name('conversations.notes.store');
         Route::post('conversations/{conversation}/attachments', [ChatAttachmentController::class, 'store'])->name('conversations.attachments.store');
         Route::get('attachments/{attachment}', [ChatAttachmentController::class, 'download'])->name('attachments.download');
