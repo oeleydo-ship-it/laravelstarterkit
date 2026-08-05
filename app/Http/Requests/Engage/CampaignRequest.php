@@ -13,6 +13,13 @@ class CampaignRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->input('video_url') === '') {
+            $this->merge(['video_url' => null]);
+        }
+    }
+
     public function rules(): array
     {
         return [
@@ -34,11 +41,13 @@ class CampaignRequest extends FormRequest
             'url_contains' => ['nullable', 'string', 'max:500'],
             'delay_ms' => ['nullable', 'integer', 'min:0', 'max:120000'],
             'frequency_hours' => ['nullable', 'integer', 'min:0', 'max:8760'],
+            'max_displays' => ['nullable', 'integer', 'min:0', 'max:1000'],
             'device' => ['nullable', Rule::in(['any', 'desktop', 'mobile'])],
             'brand_color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'text_color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'opens_campaign_id' => ['nullable', 'integer'],
             'launcher_label' => ['nullable', 'string', 'max:40'],
+            'video_url' => ['nullable', 'url', 'max:2000', 'regex:/^https:\\/\\//i'],
         ];
     }
 
@@ -56,6 +65,7 @@ class CampaignRequest extends FormRequest
                 EngageCampaign::TYPE_SLIDE_IN => 'bottom-right',
                 EngageCampaign::TYPE_TOAST => 'bottom-left',
                 EngageCampaign::TYPE_LAUNCHER => 'bottom-right',
+                EngageCampaign::TYPE_VIDEO => 'center',
                 default => 'center',
             },
             'success_message' => $this->validated('success_message') ?: 'Thanks — we will be in touch.',
@@ -70,12 +80,14 @@ class CampaignRequest extends FormRequest
             ],
             'launcher_label' => $this->validated('launcher_label') ?: 'Updates',
             'opens_campaign_id' => $this->validated('opens_campaign_id'),
+            'video_url' => $this->validated('video_url'),
         ];
 
         $targeting = [
             'url_contains' => $this->validated('url_contains'),
             'delay_ms' => (int) ($this->validated('delay_ms') ?? 0),
             'frequency_hours' => (int) ($this->validated('frequency_hours') ?? 24),
+            'max_displays' => (int) ($this->validated('max_displays') ?? 0),
             'device' => $this->validated('device') ?: 'any',
         ];
 

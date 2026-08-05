@@ -164,6 +164,30 @@ class EngageModuleTest extends TestCase
         ]);
     }
 
+    public function test_create_shows_template_gallery_then_prefills(): void
+    {
+        $tenant = $this->makeTenant();
+        $user = $this->makeUser($tenant);
+
+        $this->actingAs($user)
+            ->get(route('engage.campaigns.create'))
+            ->assertOk()
+            ->assertSee('Start from a template')
+            ->assertSee('Welcome popup');
+
+        $this->actingAs($user)
+            ->get(route('engage.campaigns.create', ['template' => 'welcome_popup']))
+            ->assertOk()
+            ->assertSee('Welcome — glad')
+            ->assertSee('Live design preview');
+
+        $this->actingAs($user)
+            ->get(route('engage.campaigns.create', ['template' => 'video_promo']))
+            ->assertOk()
+            ->assertSee('Video promo popup')
+            ->assertSee('Max displays');
+    }
+
     public function test_public_assets_avoid_vendor_tells(): void
     {
         $jsPath = resource_path('js/x/loader.js');

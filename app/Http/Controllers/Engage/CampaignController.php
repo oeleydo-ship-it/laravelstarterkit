@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Engage\CampaignRequest;
 use App\Models\EngageCampaign;
 use App\Services\Engage\SiteService;
+use App\Support\EngageTemplates;
 use Illuminate\Http\Request;
 
 class CampaignController extends Controller
@@ -32,18 +33,34 @@ class CampaignController extends Controller
         ]);
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        return view('modules.engage.campaigns.form', [
-            'campaign' => new EngageCampaign([
+        $templateKey = $request->query('template');
+
+        if (! $templateKey) {
+            return view('modules.engage.campaigns.templates', [
+                'groups' => EngageTemplates::grouped(),
+            ]);
+        }
+
+        $template = EngageTemplates::get($templateKey);
+        $campaign = $template
+            ? EngageTemplates::applyToCampaign($template['defaults'])
+            : new EngageCampaign([
                 'type' => EngageCampaign::TYPE_BAR,
                 'status' => EngageCampaign::STATUS_DRAFT,
-            ]),
+            ]);
+
+        return view('modules.engage.campaigns.form', [
+            'campaign' => $campaign,
+            'templateKey' => $templateKey,
+            'templateLabel' => $template['label'] ?? null,
             'openable' => EngageCampaign::query()
                 ->whereIn('type', [
                     EngageCampaign::TYPE_POPUP,
                     EngageCampaign::TYPE_SLIDE_IN,
                     EngageCampaign::TYPE_FORM,
+                    EngageCampaign::TYPE_VIDEO,
                 ])
                 ->orderBy('name')
                 ->get(),
@@ -69,12 +86,15 @@ class CampaignController extends Controller
     {
         return view('modules.engage.campaigns.form', [
             'campaign' => $campaign,
+            'templateKey' => null,
+            'templateLabel' => null,
             'openable' => EngageCampaign::query()
                 ->where('id', '!=', $campaign->id)
                 ->whereIn('type', [
                     EngageCampaign::TYPE_POPUP,
                     EngageCampaign::TYPE_SLIDE_IN,
                     EngageCampaign::TYPE_FORM,
+                    EngageCampaign::TYPE_VIDEO,
                 ])
                 ->orderBy('name')
                 ->get(),

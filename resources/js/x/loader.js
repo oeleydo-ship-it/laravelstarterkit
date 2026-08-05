@@ -15,8 +15,12 @@ import '../../sass/x/public.scss';
     root.className = 'x-root';
     document.body.appendChild(root);
 
-    const storageKey = (id) => `x_${key}_f_${id}`;
+    const cooldownKey = (id) => `x_${key}_f_${id}`;
+    const countKey = (id) => `x_${key}_n_${id}`;
     const isMobile = () => window.matchMedia('(max-width: 768px)').matches;
+    const markedThisPage = new Set();
+
+    const displayCount = (id) => Number(localStorage.getItem(countKey(id)) || 0);
 
     const canShow = (item) => {
         const g = item.g || {};
@@ -25,18 +29,29 @@ import '../../sass/x/public.scss';
         }
         if (g.device === 'mobile' && !isMobile()) return false;
         if (g.device === 'desktop' && isMobile()) return false;
+
+        const max = Number(g.max_displays ?? 0);
+        if (max > 0 && displayCount(item.id) >= max) return false;
+
         const hours = Number(g.frequency_hours ?? 24);
         if (hours > 0) {
-            const until = Number(localStorage.getItem(storageKey(item.id)) || 0);
+            const until = Number(localStorage.getItem(cooldownKey(item.id)) || 0);
             if (until && Date.now() < until) return false;
         }
         return true;
     };
 
+    /** Count this display (reload-safe) and start cooldown. Once per page load. */
     const markSeen = (item) => {
-        const hours = Number((item.g || {}).frequency_hours ?? 24);
+        if (markedThisPage.has(item.id)) return;
+        markedThisPage.add(item.id);
+
+        const g = item.g || {};
+        localStorage.setItem(countKey(item.id), String(displayCount(item.id) + 1));
+
+        const hours = Number(g.frequency_hours ?? 24);
         if (hours > 0) {
-            localStorage.setItem(storageKey(item.id), String(Date.now() + hours * 3600 * 1000));
+            localStorage.setItem(cooldownKey(item.id), String(Date.now() + hours * 3600 * 1000));
         }
     };
 
@@ -104,6 +119,39 @@ import '../../sass/x/public.scss';
         return btn;
     };
 
+    /** Safe embed src from YouTube / Vimeo / direct media URL. */
+    const videoEmbed = (raw) => {
+        if (!raw || typeof raw !== 'string') return null;
+        let url;
+        try {
+            url = new URL(raw.trim());
+        } catch {
+            return null;
+        }
+        if (url.protocol !== 'https:') return null;
+
+        const host = url.hostname.replace(/^www\./, '');
+        if (host === 'youtu.be') {
+            const id = url.pathname.split('/').filter(Boolean)[0];
+            return id ? { type: 'iframe', src: `https://www.youtube.com/embed/${encodeURIComponent(id)}?rel=0` } : null;
+        }
+        if (host === 'youtube.com' || host === 'm.youtube.com' || host === 'youtube-nocookie.com') {
+            let id = url.searchParams.get('v');
+            if (!id && url.pathname.startsWith('/embed/')) id = url.pathname.split('/')[2];
+            if (!id && url.pathname.startsWith('/shorts/')) id = url.pathname.split('/')[2];
+            return id ? { type: 'iframe', src: `https://www.youtube.com/embed/${encodeURIComponent(id)}?rel=0` } : null;
+        }
+        if (host === 'vimeo.com' || host === 'player.vimeo.com') {
+            const parts = url.pathname.split('/').filter(Boolean);
+            const id = host === 'player.vimeo.com' ? parts[1] : parts[0];
+            return id && /^\d+$/.test(id) ? { type: 'iframe', src: `https://player.vimeo.com/video/${id}` } : null;
+        }
+        if (/\.(mp4|webm|ogg)(\?|$)/i.test(url.pathname)) {
+            return { type: 'video', src: url.href };
+        }
+        return null;
+    };
+
     const maybeForm = (card, item, dismiss) => {
         const wantsForm = item.t === 'form' || item.c?.fields?.email || item.c?.fields?.name;
         if (!wantsForm) {
@@ -150,7 +198,6 @@ import '../../sass/x/public.scss';
                 website: '',
             });
             track(item, 'submit');
-            markSeen(item);
             card.innerHTML = '';
             card.appendChild(el('div', 'x-title', item.c?.success_message || 'Thanks'));
             setTimeout(dismiss, 1800);
@@ -168,11 +215,11 @@ import '../../sass/x/public.scss';
         attachCta(bar, item);
         const dismiss = () => {
             bar.remove();
-            markSeen(item);
             track(item, 'dismiss');
         };
         bar.appendChild(closeBtn(dismiss));
         root.appendChild(bar);
+        markSeen(item);
         track(item, 'impression');
     };
 
@@ -186,13 +233,54 @@ import '../../sass/x/public.scss';
 
         const dismiss = () => {
             (mode === 'popup' ? wrap : card).remove();
-            markSeen(item);
             track(item, 'dismiss');
         };
         card.appendChild(closeBtn(dismiss));
         maybeForm(card, item, dismiss);
 
         root.appendChild(mode === 'popup' ? wrap : card);
+        markSeen(item);
+        track(item, 'impression');
+    };
+
+    const renderVideo = (item) => {
+        const wrap = el('div', 'x-overlay');
+        const card = el('div', 'x-card x-video-card');
+        wrap.appendChild(card);
+
+        const dismiss = () => {
+            wrap.remove();
+            track(item, 'dismiss');
+        };
+        card.appendChild(closeBtn(dismiss));
+
+        if (item.c?.headline) card.appendChild(el('div', 'x-title', item.c.headline));
+        if (item.c?.body) card.appendChild(el('p', 'x-body', item.c.body));
+
+        const media = videoEmbed(item.c?.video_url);
+        const frame = el('div', 'x-video-frame');
+        if (media?.type === 'iframe') {
+            const iframe = el('iframe', 'x-video');
+            iframe.src = media.src;
+            iframe.title = item.c?.headline || 'Video';
+            iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+            iframe.setAttribute('allowfullscreen', '');
+            iframe.loading = 'lazy';
+            frame.appendChild(iframe);
+        } else if (media?.type === 'video') {
+            const video = el('video', 'x-video');
+            video.src = media.src;
+            video.controls = true;
+            video.playsInline = true;
+            frame.appendChild(video);
+        } else {
+            frame.appendChild(el('div', 'x-body', 'Video unavailable'));
+        }
+        card.appendChild(frame);
+        attachCta(card, item);
+
+        root.appendChild(wrap);
+        markSeen(item);
         track(item, 'impression');
     };
 
@@ -208,10 +296,10 @@ import '../../sass/x/public.scss';
         text.textContent = loc ? `${name} ${action} · ${loc}` : `${name} ${action}`;
         toast.appendChild(text);
         root.appendChild(toast);
+        markSeen(item);
         track(item, 'impression');
         setTimeout(() => {
             toast.remove();
-            markSeen(item);
         }, 5000);
     };
 
@@ -233,6 +321,9 @@ import '../../sass/x/public.scss';
                 case 'form':
                     renderCard(item, item.c?.position === 'center' ? 'popup' : 'slide');
                     break;
+                case 'video':
+                    renderVideo(item);
+                    break;
                 case 'toast':
                     renderToast(item);
                     break;
@@ -249,6 +340,7 @@ import '../../sass/x/public.scss';
                         }
                     });
                     root.appendChild(btn);
+                    markSeen(item);
                     track(item, 'impression');
                     break;
                 }

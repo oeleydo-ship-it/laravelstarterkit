@@ -18,6 +18,7 @@ class EngageCampaign extends Model
     public const TYPE_FORM = 'form';
     public const TYPE_TOAST = 'toast';
     public const TYPE_LAUNCHER = 'launcher';
+    public const TYPE_VIDEO = 'video';
 
     public const STATUS_DRAFT = 'draft';
     public const STATUS_LIVE = 'live';
@@ -59,6 +60,7 @@ class EngageCampaign extends Model
             self::TYPE_FORM => 'Lead form',
             self::TYPE_TOAST => 'Notification toast',
             self::TYPE_LAUNCHER => 'Launcher',
+            self::TYPE_VIDEO => 'Video popup',
         ];
     }
 
