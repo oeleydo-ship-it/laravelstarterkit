@@ -18,8 +18,10 @@
         .slot { border: 1px solid #e2e8f0; background: #fff; border-radius: 999px; padding: 8px 12px; cursor: pointer; font-size: .85rem; }
         .slot.is-on { background: var(--brand); color: #fff; border-color: var(--brand); }
         .btn { margin-top: 18px; width: 100%; border: 0; border-radius: 10px; padding: 12px; background: var(--brand); color: #fff; font-weight: 700; cursor: pointer; }
+        .btn:disabled { opacity: .55; cursor: not-allowed; }
         .ok { background: #ecfdf5; color: #065f46; padding: 12px; border-radius: 10px; margin-bottom: 16px; }
-        .hp { position: absolute; left: -9999px; opacity: 0; height: 0; width: 0; }
+        .err { background: #fef2f2; color: #991b1b; padding: 12px; border-radius: 10px; margin-bottom: 16px; }
+        .hp { position: absolute !important; left: -10000px !important; top: auto !important; width: 1px !important; height: 1px !important; overflow: hidden !important; opacity: 0 !important; }
     </style>
 </head>
 <body>
@@ -28,86 +30,115 @@
         <h1>{{ $site->name }}</h1>
         <p class="muted">Pick a service and time that works for you.</p>
 
-        @if(session('success') || request('booked'))
-            <div class="ok">{{ session('success') ?: 'Your appointment is confirmed.' }}</div>
+        @if($errors->any())
+            <div class="err">
+                @foreach($errors->all() as $error)
+                    <div>{{ $error }}</div>
+                @endforeach
+            </div>
         @endif
 
-        <form method="POST" action="{{ url('/b/'.$site->public_key.'/book') }}" id="book-form">
-            @csrf
-            <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off">
+        @if(!empty($booked))
+            <div class="ok">{{ session('success') ?: 'Your appointment is confirmed. Check your email for details.' }}</div>
+            <p class="muted mb-0">You can close this page, or <a href="{{ url('/b/'.$site->public_key) }}">book another time</a>.</p>
+        @else
+            <form method="POST" action="{{ url('/b/'.$site->public_key.'/book') }}" id="book-form">
+                @csrf
+                <div class="hp" aria-hidden="true">
+                    <label>Company website<input type="text" name="b_meta_hp" tabindex="-1" autocomplete="off"></label>
+                </div>
 
-            <label>Service</label>
-            <select name="service_id" id="service" required>
-                <option value="">Choose…</option>
-                @foreach($services as $service)
-                    <option value="{{ $service->id }}" data-mins="{{ $service->duration_minutes }}">
-                        {{ $service->name }} ({{ $service->duration_minutes }} min)
-                    </option>
-                @endforeach
-            </select>
+                <label>Service</label>
+                <select name="service_id" id="service" required>
+                    <option value="">Choose…</option>
+                    @foreach($services as $service)
+                        <option value="{{ $service->id }}" @selected(old('service_id') == $service->id)>
+                            {{ $service->name }} ({{ $service->duration_minutes }} min)
+                        </option>
+                    @endforeach
+                </select>
 
-            <label>Date</label>
-            <input type="date" id="date" min="{{ now($site->timezone)->toDateString() }}" required>
+                <label>Date</label>
+                <input type="date" id="date" min="{{ now($site->timezone)->toDateString() }}"
+                       value="{{ old('date') }}" required>
 
-            <label>Available times</label>
-            <div class="slots" id="slots"><span class="muted">Select a service and date.</span></div>
-            <input type="hidden" name="starts_at" id="starts_at" required>
+                <label>Available times</label>
+                <div class="slots" id="slots"><span class="muted">Select a service and date.</span></div>
+                <input type="hidden" name="starts_at" id="starts_at" value="{{ old('starts_at') }}" required>
 
-            <label>Your name</label>
-            <input type="text" name="guest_name" required>
+                <label>Your name</label>
+                <input type="text" name="guest_name" value="{{ old('guest_name') }}" required autocomplete="name">
 
-            <label>Email</label>
-            <input type="email" name="guest_email" required>
+                <label>Email</label>
+                <input type="email" name="guest_email" value="{{ old('guest_email') }}" required autocomplete="email">
 
-            <label>Phone (optional)</label>
-            <input type="text" name="guest_phone">
+                <label>Phone (optional)</label>
+                <input type="text" name="guest_phone" value="{{ old('guest_phone') }}" autocomplete="tel">
 
-            <label>Notes (optional)</label>
-            <textarea name="notes" rows="2"></textarea>
+                <label>Notes (optional)</label>
+                <textarea name="notes" rows="2">{{ old('notes') }}</textarea>
 
-            <button class="btn" type="submit">Confirm booking</button>
-        </form>
+                <button class="btn" type="submit" id="submit-btn">Confirm booking</button>
+            </form>
+        @endif
     </div>
 </div>
+@unless(!empty($booked))
 <script>
 (function () {
     const service = document.getElementById('service');
     const date = document.getElementById('date');
     const slotsEl = document.getElementById('slots');
     const starts = document.getElementById('starts_at');
+    const form = document.getElementById('book-form');
     const base = @json(url('/b/'.$site->public_key));
 
     async function loadSlots() {
+        const keep = starts.value;
         starts.value = '';
         if (!service.value || !date.value) return;
         slotsEl.innerHTML = '<span class="muted">Loading…</span>';
-        const url = base + '/slots?service_id=' + encodeURIComponent(service.value) + '&date=' + encodeURIComponent(date.value);
-        const res = await fetch(url, { headers: { Accept: 'application/json' } });
-        const data = await res.json();
-        const list = data.slots || [];
-        if (!list.length) {
-            slotsEl.innerHTML = '<span class="muted">No times open this day.</span>';
-            return;
-        }
-        slotsEl.innerHTML = '';
-        list.forEach((iso) => {
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'slot';
-            const d = new Date(iso);
-            btn.textContent = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-            btn.addEventListener('click', () => {
-                slotsEl.querySelectorAll('.slot').forEach((el) => el.classList.remove('is-on'));
-                btn.classList.add('is-on');
-                starts.value = iso;
+        try {
+            const url = base + '/slots?service_id=' + encodeURIComponent(service.value) + '&date=' + encodeURIComponent(date.value);
+            const res = await fetch(url, { headers: { Accept: 'application/json' } });
+            const data = await res.json();
+            const list = data.slots || [];
+            if (!list.length) {
+                slotsEl.innerHTML = '<span class="muted">No times open this day.</span>';
+                return;
+            }
+            slotsEl.innerHTML = '';
+            list.forEach((iso) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'slot' + (keep === iso ? ' is-on' : '');
+                if (keep === iso) starts.value = iso;
+                const d = new Date(iso);
+                btn.textContent = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+                btn.addEventListener('click', () => {
+                    slotsEl.querySelectorAll('.slot').forEach((el) => el.classList.remove('is-on'));
+                    btn.classList.add('is-on');
+                    starts.value = iso;
+                });
+                slotsEl.appendChild(btn);
             });
-            slotsEl.appendChild(btn);
-        });
+        } catch (e) {
+            slotsEl.innerHTML = '<span class="muted">Could not load times. Try again.</span>';
+        }
     }
+
+    form?.addEventListener('submit', (e) => {
+        if (!starts.value) {
+            e.preventDefault();
+            alert('Please select an available time.');
+        }
+    });
 
     service.addEventListener('change', loadSlots);
     date.addEventListener('change', loadSlots);
+    if (service.value && date.value) loadSlots();
 })();
 </script>
+@endunless
 </body>
 </html>

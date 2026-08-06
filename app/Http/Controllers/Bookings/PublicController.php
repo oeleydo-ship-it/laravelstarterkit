@@ -7,6 +7,7 @@ use App\Models\BookingService;
 use App\Services\Bookings\AppointmentService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class PublicController extends Controller
 {
@@ -28,6 +29,7 @@ class PublicController extends Controller
             'site' => $site,
             'services' => $services,
             'brand' => $site->brandColor(),
+            'booked' => $request->boolean('booked') || session()->has('success'),
         ]);
     }
 
@@ -56,8 +58,9 @@ class PublicController extends Controller
         $site = $request->attributes->get('booking_site');
         $tenant = $request->attributes->get('tenant');
 
-        if (filled($request->input('website'))) {
-            return redirect($this->sitesUrl($site))->with('success', 'Booked.');
+        // Honeypot — only treat as bot if filled; use an obscure name so browsers don't autofill it.
+        if (filled($request->input('b_meta_hp'))) {
+            return redirect()->to(url('/b/'.$site->public_key));
         }
 
         $data = $request->validate([
@@ -75,20 +78,24 @@ class PublicController extends Controller
             ->where('id', $data['service_id'])
             ->firstOrFail();
 
-        $this->appointments->book($tenant, $site, $service, $data['starts_at'], [
-            'name' => $data['guest_name'],
-            'email' => $data['guest_email'],
-            'phone' => $data['guest_phone'] ?? null,
-            'notes' => $data['notes'] ?? null,
-        ]);
+        try {
+            $this->appointments->book($tenant, $site, $service, $data['starts_at'], [
+                'name' => $data['guest_name'],
+                'email' => $data['guest_email'],
+                'phone' => $data['guest_phone'] ?? null,
+                'notes' => $data['notes'] ?? null,
+            ]);
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+            return redirect()
+                ->to(url('/b/'.$site->public_key))
+                ->withInput($request->except(['b_meta_hp']))
+                ->withErrors(['starts_at' => $e->getMessage() ?: 'That time is no longer available.']);
+        }
 
         return redirect()
             ->to(url('/b/'.$site->public_key).'?booked=1')
-            ->with('success', 'Your appointment is confirmed. Check your email for details.');
-    }
-
-    protected function sitesUrl($site): string
-    {
-        return url('/b/'.$site->public_key);
+            ->with('success', 'Your appointment is confirmed. We sent a confirmation to your email.');
     }
 }

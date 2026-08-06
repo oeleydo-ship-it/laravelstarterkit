@@ -35,6 +35,12 @@
                         <td>
                             <div class="fw-medium">{{ $row->guest_name }}</div>
                             <div class="small text-muted">{{ $row->guest_email }}</div>
+                            @if($row->guest_phone)
+                                <div class="small text-muted">{{ $row->guest_phone }}</div>
+                            @endif
+                            @if($row->notes)
+                                <div class="small text-muted mt-1">{{ $row->notes }}</div>
+                            @endif
                         </td>
                         <td><span class="badge {{ $row->statusBadgeClass() }}">{{ $row->statusLabel() }}</span></td>
                         <td class="text-end">

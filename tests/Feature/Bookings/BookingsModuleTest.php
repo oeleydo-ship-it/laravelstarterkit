@@ -110,12 +110,57 @@ class BookingsModuleTest extends TestCase
             'starts_at' => $slots[0],
             'guest_name' => 'Ada',
             'guest_email' => 'ada@example.com',
-            'website' => '',
+            'guest_phone' => '555-0100',
+            'notes' => 'Looking forward to it',
+            'b_meta_hp' => '',
         ])->assertRedirect();
 
         $this->assertDatabaseHas('booking_appointments', [
             'guest_email' => 'ada@example.com',
+            'guest_name' => 'Ada',
+            'guest_phone' => '555-0100',
+            'notes' => 'Looking forward to it',
             'booking_service_id' => $service->id,
+        ]);
+    }
+
+    public function test_honeypot_does_not_create_appointment(): void
+    {
+        $tenant = $this->makeTenant();
+        $site = BookingSite::withoutGlobalScopes()->create([
+            'tenant_id' => $tenant->id,
+            'public_key' => 'bookhoneypotkeyabcdefghijklmnopqrst',
+            'name' => 'Demos',
+            'timezone' => 'UTC',
+            'settings' => [],
+        ]);
+        $service = BookingService::withoutGlobalScopes()->create([
+            'tenant_id' => $tenant->id,
+            'booking_site_id' => $site->id,
+            'name' => 'Call',
+            'duration_minutes' => 30,
+            'active' => true,
+        ]);
+        $day = Carbon::now('UTC')->next(Carbon::WEDNESDAY)->startOfDay();
+        BookingAvailability::withoutGlobalScopes()->create([
+            'tenant_id' => $tenant->id,
+            'booking_site_id' => $site->id,
+            'weekday' => $day->dayOfWeek,
+            'start_time' => '10:00:00',
+            'end_time' => '12:00:00',
+        ]);
+        $slots = $this->getJson('/b/'.$site->public_key.'/slots?service_id='.$service->id.'&date='.$day->toDateString())->json('slots');
+
+        $this->post('/b/'.$site->public_key.'/book', [
+            'service_id' => $service->id,
+            'starts_at' => $slots[0],
+            'guest_name' => 'Bot',
+            'guest_email' => 'bot@example.com',
+            'b_meta_hp' => 'https://spam.example',
+        ])->assertRedirect();
+
+        $this->assertDatabaseMissing('booking_appointments', [
+            'guest_email' => 'bot@example.com',
         ]);
     }
 }

@@ -3,15 +3,18 @@
 namespace App\Services\Bookings;
 
 use App\Mail\BookingConfirmationMail;
+use App\Mail\BookingOwnerNotificationMail;
 use App\Models\BookingAppointment;
 use App\Models\BookingAvailability;
 use App\Models\BookingException;
 use App\Models\BookingService;
 use App\Models\BookingSite;
 use App\Models\Tenant;
+use App\Models\User;
 use App\Services\ModuleLeadSync;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class AppointmentService
@@ -59,10 +62,14 @@ class AppointmentService
         $buffer = max(0, (int) $service->buffer_minutes);
         $step = $duration + $buffer;
 
+        $dayStart = $day->copy()->startOfDay()->utc();
+        $dayEnd = $day->copy()->endOfDay()->utc();
+
         $busy = BookingAppointment::withoutGlobalScopes()
             ->where('booking_site_id', $site->id)
             ->where('status', BookingAppointment::STATUS_SCHEDULED)
-            ->whereDate('starts_at', $day->toDateString())
+            ->where('starts_at', '<', $dayEnd)
+            ->where('ends_at', '>', $dayStart)
             ->get(['starts_at', 'ends_at']);
 
         $slots = [];
@@ -74,7 +81,7 @@ class AppointmentService
 
             while ($cursor->copy()->addMinutes($duration)->lte($end)) {
                 $slotEnd = $cursor->copy()->addMinutes($duration);
-                if ($cursor->gte($now) && ! $this->overlaps($busy, $cursor, $slotEnd->copy()->addMinutes($buffer))) {
+                if ($cursor->gte($now) && ! $this->overlaps($busy, $cursor->copy()->utc(), $slotEnd->copy()->addMinutes($buffer)->utc())) {
                     $slots[] = $cursor->toIso8601String();
                 }
                 $cursor->addMinutes($step);
@@ -84,10 +91,10 @@ class AppointmentService
         return $slots;
     }
 
-    protected function overlaps(Collection $busy, Carbon $start, Carbon $end): bool
+    protected function overlaps(Collection $busy, Carbon $startUtc, Carbon $endUtc): bool
     {
         foreach ($busy as $row) {
-            if ($start->lt($row->ends_at) && $end->gt($row->starts_at)) {
+            if ($startUtc->lt($row->ends_at) && $endUtc->gt($row->starts_at)) {
                 return true;
             }
         }
@@ -103,14 +110,14 @@ class AppointmentService
         array $guest,
     ): BookingAppointment {
         $tz = $site->timezone ?: 'UTC';
-        $start = Carbon::parse($startsAt, $tz);
+        $start = Carbon::parse($startsAt)->timezone($tz);
         $end = $start->copy()->addMinutes((int) $service->duration_minutes);
 
         $slots = $this->availableSlots($site, $service, $start->copy());
         $ok = collect($slots)->contains(function ($iso) use ($start) {
-            return Carbon::parse($iso)->equalTo($start);
+            return abs(Carbon::parse($iso)->diffInSeconds($start)) < 60;
         });
-        abort_unless($ok, 422, 'Slot unavailable.');
+        abort_unless($ok, 422, 'That time is no longer available. Please pick another slot.');
 
         $clientId = $this->sync->sync(
             $tenant,
@@ -124,8 +131,8 @@ class AppointmentService
             'tenant_id' => $tenant->id,
             'booking_site_id' => $site->id,
             'booking_service_id' => $service->id,
-            'starts_at' => $start->clone()->utc(),
-            'ends_at' => $end->clone()->utc(),
+            'starts_at' => $start->copy()->utc(),
+            'ends_at' => $end->copy()->utc(),
             'guest_name' => $guest['name'],
             'guest_email' => $guest['email'],
             'guest_phone' => $guest['phone'] ?? null,
@@ -134,10 +141,29 @@ class AppointmentService
             'client_id' => $clientId,
         ]);
 
+        $appointment->load('service', 'site');
+
         try {
-            Mail::to($appointment->guest_email)->send(new BookingConfirmationMail($appointment->load('service', 'site')));
-        } catch (\Throwable) {
-            // Mail may be unconfigured in local/test — booking still succeeds.
+            Mail::to($appointment->guest_email)->send(new BookingConfirmationMail($appointment));
+        } catch (\Throwable $e) {
+            Log::warning('Booking guest confirmation mail failed', ['id' => $appointment->id, 'error' => $e->getMessage()]);
+        }
+
+        $owners = User::withoutGlobalScopes()
+            ->where('tenant_id', $tenant->id)
+            ->where('status', 'active')
+            ->whereIn('role', ['owner', 'admin'])
+            ->pluck('email')
+            ->filter()
+            ->unique()
+            ->values();
+
+        foreach ($owners as $email) {
+            try {
+                Mail::to($email)->send(new BookingOwnerNotificationMail($appointment));
+            } catch (\Throwable $e) {
+                Log::warning('Booking owner notification mail failed', ['email' => $email, 'error' => $e->getMessage()]);
+            }
         }
 
         return $appointment;
