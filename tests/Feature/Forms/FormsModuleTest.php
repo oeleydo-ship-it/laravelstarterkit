@@ -54,6 +54,45 @@ class FormsModuleTest extends TestCase
         $this->actingAs($user)->get(route('forms.dashboard'))->assertOk()->assertSee('Forms');
     }
 
+    public function test_owner_can_list_and_create_from_template(): void
+    {
+        $tenant = $this->makeTenant();
+        $user = $this->makeUser($tenant);
+
+        $this->actingAs($user)
+            ->get(route('forms.forms.index'))
+            ->assertOk()
+            ->assertSee('Forms');
+
+        $this->actingAs($user)
+            ->get(route('forms.forms.create'))
+            ->assertOk()
+            ->assertSee('Choose a template');
+
+        $this->actingAs($user)
+            ->get(route('forms.forms.create', ['template' => 'contact_lead']))
+            ->assertOk()
+            ->assertSee('Contact us');
+
+        $this->actingAs($user)
+            ->post(route('forms.forms.store'), [
+                'name' => 'Contact us',
+                'type' => 'lead',
+                'status' => 'draft',
+                'thank_you' => 'Thanks!',
+                'fields' => [
+                    ['key' => 'name', 'label' => 'Name', 'type' => 'text', 'required' => '1'],
+                    ['key' => 'email', 'label' => 'Email', 'type' => 'email', 'required' => '1'],
+                ],
+            ])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('forms', [
+            'tenant_id' => $tenant->id,
+            'name' => 'Contact us',
+        ]);
+    }
+
     public function test_public_submit(): void
     {
         $tenant = $this->makeTenant();
