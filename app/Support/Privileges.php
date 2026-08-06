@@ -14,6 +14,12 @@ class Privileges
     public const EMAIL_MANAGE = 'email.manage';
     public const ENGAGE_VIEW = 'engage.view';
     public const ENGAGE_MANAGE = 'engage.manage';
+    public const FORMS_VIEW = 'forms.view';
+    public const FORMS_MANAGE = 'forms.manage';
+    public const REVIEWS_VIEW = 'reviews.view';
+    public const REVIEWS_MANAGE = 'reviews.manage';
+    public const BOOKINGS_VIEW = 'bookings.view';
+    public const BOOKINGS_MANAGE = 'bookings.manage';
     public const TEAM_MANAGE = 'team.manage';
     public const MODULES_MANAGE = 'modules.manage';
     public const BILLING_MANAGE = 'billing.manage';
@@ -32,6 +38,12 @@ class Privileges
             self::EMAIL_MANAGE => 'Manage email marketing',
             self::ENGAGE_VIEW => 'View engage campaigns',
             self::ENGAGE_MANAGE => 'Manage engage campaigns',
+            self::FORMS_VIEW => 'View forms & surveys',
+            self::FORMS_MANAGE => 'Manage forms & surveys',
+            self::REVIEWS_VIEW => 'View reviews',
+            self::REVIEWS_MANAGE => 'Manage reviews',
+            self::BOOKINGS_VIEW => 'View bookings',
+            self::BOOKINGS_MANAGE => 'Manage bookings',
             self::TEAM_MANAGE => 'Manage team & groups',
             self::MODULES_MANAGE => 'Manage modules',
             self::BILLING_MANAGE => 'Manage billing',
@@ -52,6 +64,9 @@ class Privileges
             'Live Chat' => [self::CHAT_AGENT, self::CHAT_MANAGE],
             'Email Marketing' => [self::EMAIL_VIEW, self::EMAIL_MANAGE],
             'Engage' => [self::ENGAGE_VIEW, self::ENGAGE_MANAGE],
+            'Forms' => [self::FORMS_VIEW, self::FORMS_MANAGE],
+            'Reviews' => [self::REVIEWS_VIEW, self::REVIEWS_MANAGE],
+            'Bookings' => [self::BOOKINGS_VIEW, self::BOOKINGS_MANAGE],
             'Workspace' => [self::TEAM_MANAGE, self::MODULES_MANAGE, self::BILLING_MANAGE, self::SETTINGS_MANAGE],
         ];
     }
@@ -67,6 +82,9 @@ class Privileges
                 self::CHAT_AGENT,
                 self::EMAIL_VIEW,
                 self::ENGAGE_VIEW,
+                self::FORMS_VIEW,
+                self::REVIEWS_VIEW,
+                self::BOOKINGS_VIEW,
             ],
             default => [],
         };

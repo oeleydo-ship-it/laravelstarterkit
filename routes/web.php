@@ -41,6 +41,22 @@ use App\Http\Controllers\Engage\DashboardController as EngageDashboardController
 use App\Http\Controllers\Engage\EmbedController as EngageEmbedController;
 use App\Http\Controllers\Engage\LeadController as EngageLeadController;
 use App\Http\Controllers\Engage\SettingsController as EngageSettingsController;
+use App\Http\Controllers\Forms\DashboardController as FormsDashboardController;
+use App\Http\Controllers\Forms\FormController as FormsFormController;
+use App\Http\Controllers\Forms\SubmissionController as FormsSubmissionController;
+use App\Http\Controllers\Forms\SettingsController as FormsSettingsController;
+use App\Http\Controllers\Forms\EmbedController as FormsEmbedController;
+use App\Http\Controllers\Reviews\DashboardController as ReviewsDashboardController;
+use App\Http\Controllers\Reviews\EmbedController as ReviewsEmbedController;
+use App\Http\Controllers\Reviews\ReviewController as ReviewsReviewController;
+use App\Http\Controllers\Reviews\SettingsController as ReviewsSettingsController;
+use App\Http\Controllers\Reviews\WidgetController as ReviewsWidgetController;
+use App\Http\Controllers\Bookings\DashboardController as BookingsDashboardController;
+use App\Http\Controllers\Bookings\ServiceController as BookingsServiceController;
+use App\Http\Controllers\Bookings\AvailabilityController as BookingsAvailabilityController;
+use App\Http\Controllers\Bookings\AppointmentController as BookingsAppointmentController;
+use App\Http\Controllers\Bookings\SettingsController as BookingsSettingsController;
+use App\Http\Controllers\Bookings\PublicController as BookingsPublicController;
 use App\Models\Plan;
 
 /*
@@ -250,6 +266,47 @@ Route::middleware(['auth', \App\Http\Middleware\SetTenant::class])->group(functi
         Route::post('settings/rotate', [EngageSettingsController::class, 'rotateKey'])->name('settings.rotate');
     });
 
+    // Forms Module (Reviews and Bookings module routes follow here.)
+    Route::middleware([\App\Http\Middleware\EnsureModuleEnabled::class . ':forms'])->prefix('forms')->name('forms.')->group(function () {
+        Route::get('/', [FormsDashboardController::class, 'index'])->name('dashboard');
+        Route::resource('forms', FormsFormController::class)->except(['show']);
+        Route::get('submissions', [FormsSubmissionController::class, 'index'])->name('submissions.index');
+        Route::get('submissions/export', [FormsSubmissionController::class, 'export'])->name('submissions.export');
+        Route::get('install', [FormsSettingsController::class, 'install'])->name('install');
+        Route::get('settings', [FormsSettingsController::class, 'index'])->name('settings');
+        Route::put('settings', [FormsSettingsController::class, 'update'])->name('settings.update');
+        Route::post('settings/rotate', [FormsSettingsController::class, 'rotateKey'])->name('settings.rotate');
+    });
+
+    // Reviews & Testimonials Module
+    Route::middleware([\App\Http\Middleware\EnsureModuleEnabled::class . ':reviews'])->prefix('reviews')->name('reviews.')->group(function () {
+        Route::get('/', [ReviewsDashboardController::class, 'index'])->name('dashboard');
+        Route::get('reviews', [ReviewsReviewController::class, 'index'])->name('index');
+        Route::put('reviews/{review}/approve', [ReviewsReviewController::class, 'approve'])->name('approve');
+        Route::put('reviews/{review}/reject', [ReviewsReviewController::class, 'reject'])->name('reject');
+        Route::delete('reviews/{review}', [ReviewsReviewController::class, 'destroy'])->name('destroy');
+        Route::resource('widgets', ReviewsWidgetController::class)->except(['show']);
+        Route::get('install', [ReviewsSettingsController::class, 'install'])->name('install');
+        Route::get('settings', [ReviewsSettingsController::class, 'index'])->name('settings');
+        Route::put('settings', [ReviewsSettingsController::class, 'update'])->name('settings.update');
+    });
+
+    // Bookings Module
+    Route::middleware([\App\Http\Middleware\EnsureModuleEnabled::class . ':bookings'])->prefix('bookings')->name('bookings.')->group(function () {
+        Route::get('/', [BookingsDashboardController::class, 'index'])->name('dashboard');
+        Route::resource('services', BookingsServiceController::class)->except(['show']);
+        Route::get('availability', [BookingsAvailabilityController::class, 'edit'])->name('availability.edit');
+        Route::put('availability', [BookingsAvailabilityController::class, 'update'])->name('availability.update');
+        Route::post('availability/exceptions', [BookingsAvailabilityController::class, 'storeException'])->name('availability.exceptions.store');
+        Route::delete('availability/exceptions/{exception}', [BookingsAvailabilityController::class, 'destroyException'])->name('availability.exceptions.destroy');
+        Route::get('appointments', [BookingsAppointmentController::class, 'index'])->name('appointments.index');
+        Route::put('appointments/{appointment}/status', [BookingsAppointmentController::class, 'updateStatus'])->name('appointments.status');
+        Route::get('install', [BookingsSettingsController::class, 'install'])->name('install');
+        Route::get('settings', [BookingsSettingsController::class, 'index'])->name('settings');
+        Route::put('settings', [BookingsSettingsController::class, 'update'])->name('settings.update');
+        Route::post('settings/rotate', [BookingsSettingsController::class, 'rotateKey'])->name('settings.rotate');
+    });
+
     // ─── Profile ───
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -310,6 +367,38 @@ Route::get('/x/{siteKey}.js', [EngageEmbedController::class, 'boot'])
         \App\Http\Middleware\AllowPublicFraming::class,
     ])
     ->where(['siteKey' => '[A-Za-z0-9]+']);
+
+// White-label public form embed.
+Route::prefix('f/{siteKey}')->middleware(['throttle:120,1', \App\Http\Middleware\SetTenantFromFormSiteKey::class, \App\Http\Middleware\AllowPublicFraming::class])->where(['siteKey' => '[A-Za-z0-9]+'])->group(function () {
+    Route::options('{any?}', [FormsEmbedController::class, 'preflight'])->where('any', '.*');
+    Route::get('c', [FormsEmbedController::class, 'config']);
+    Route::post('s', [FormsEmbedController::class, 'submit']);
+});
+Route::get('/f/{siteKey}.js', [FormsEmbedController::class, 'boot'])->middleware(['throttle:120,1', \App\Http\Middleware\SetTenantFromFormSiteKey::class, \App\Http\Middleware\AllowPublicFraming::class])->where(['siteKey' => '[A-Za-z0-9]+']);
+
+// White-label reviews embed and public submission routes.
+Route::prefix('r/{siteKey}')->middleware(['throttle:120,1', \App\Http\Middleware\SetTenantFromReviewSiteKey::class, \App\Http\Middleware\AllowPublicFraming::class])->where(['siteKey' => '[A-Za-z0-9]+'])->group(function () {
+    Route::get('c', [ReviewsEmbedController::class, 'config']);
+    Route::post('s', [ReviewsEmbedController::class, 'submit']);
+    Route::get('write', [ReviewsEmbedController::class, 'write'])->name('reviews.write');
+});
+Route::get('/r/{siteKey}.js', [ReviewsEmbedController::class, 'boot'])
+    ->middleware(['throttle:120,1', \App\Http\Middleware\SetTenantFromReviewSiteKey::class, \App\Http\Middleware\AllowPublicFraming::class])
+    ->where(['siteKey' => '[A-Za-z0-9]+']);
+
+// Public booking page
+Route::prefix('b/{siteKey}')
+    ->middleware([
+        'throttle:60,1',
+        \App\Http\Middleware\SetTenantFromBookingSiteKey::class,
+        \App\Http\Middleware\AllowPublicFraming::class,
+    ])
+    ->where(['siteKey' => '[A-Za-z0-9]+'])
+    ->group(function () {
+        Route::get('/', [BookingsPublicController::class, 'show']);
+        Route::get('slots', [BookingsPublicController::class, 'slots']);
+        Route::post('book', [BookingsPublicController::class, 'book']);
+    });
 
 /*
 |--------------------------------------------------------------------------

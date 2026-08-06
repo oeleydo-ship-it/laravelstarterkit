@@ -28,7 +28,10 @@
             || ($tenant->isModuleEnabled('tickets') && auth()->user()->canAccessModule('tickets'))
             || ($tenant->isModuleEnabled('chat') && auth()->user()->canAccessModule('chat'))
             || ($tenant->isModuleEnabled('email') && auth()->user()->canAccessModule('email'))
-            || ($tenant->isModuleEnabled('engage') && auth()->user()->canAccessModule('engage')))
+            || ($tenant->isModuleEnabled('engage') && auth()->user()->canAccessModule('engage'))
+            || ($tenant->isModuleEnabled('forms') && auth()->user()->canAccessModule('forms'))
+            || ($tenant->isModuleEnabled('reviews') && auth()->user()->canAccessModule('reviews'))
+            || ($tenant->isModuleEnabled('bookings') && auth()->user()->canAccessModule('bookings')))
             <div class="nav-section">
                 <div class="nav-section-title">Modules</div>
 
@@ -84,6 +87,35 @@
                             <path d="M13.73 21a2 2 0 0 1-3.46 0" />
                         </svg>
                         Engage
+                    </a>
+                @endif
+
+                @if($tenant->isModuleEnabled('forms') && auth()->user()->canAccessModule('forms'))
+                    <a href="{{ route('forms.dashboard') }}" class="nav-link {{ request()->routeIs('forms.*') ? 'active' : '' }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg>
+                        Forms
+                    </a>
+                @endif
+
+                @if($tenant->isModuleEnabled('reviews') && auth()->user()->canAccessModule('reviews'))
+                    <a href="{{ route('reviews.dashboard') }}" class="nav-link {{ request()->routeIs('reviews.*') ? 'active' : '' }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 20.5s-7-4.4-7-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7 3.3c0 5.8-7 10.2-7 10.2z" />
+                            <path d="m12 9 .9 1.8 2 .3-1.5 1.4.4 2-1.8-.9-1.8.9.4-2-1.5-1.4 2-.3z" />
+                        </svg>
+                        Reviews
+                    </a>
+                @endif
+
+                @if($tenant->isModuleEnabled('bookings') && auth()->user()->canAccessModule('bookings'))
+                    <a href="{{ route('bookings.dashboard') }}" class="nav-link {{ request()->routeIs('bookings.*') ? 'active' : '' }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" />
+                            <line x1="16" y1="2" x2="16" y2="6" />
+                            <line x1="8" y1="2" x2="8" y2="6" />
+                            <line x1="3" y1="10" x2="21" y2="10" />
+                        </svg>
+                        Bookings
                     </a>
                 @endif
             </div>

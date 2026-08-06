@@ -42,6 +42,24 @@ class ModuleCatalog
                 'description' => 'White-label announcement bars, popups, lead forms, and on-site notifications.',
                 'enabled_by_default' => false,
             ],
+            [
+                'key' => 'forms',
+                'name' => 'Forms & Surveys',
+                'description' => 'Embeddable lead forms, surveys, quizzes, and NPS with CRM/email sync.',
+                'enabled_by_default' => false,
+            ],
+            [
+                'key' => 'reviews',
+                'name' => 'Reviews & Testimonials',
+                'description' => 'Collect, moderate, and display reviews with a white-label on-site widget.',
+                'enabled_by_default' => false,
+            ],
+            [
+                'key' => 'bookings',
+                'name' => 'Bookings',
+                'description' => 'Services, availability, and public appointment booking for demos and support.',
+                'enabled_by_default' => false,
+            ],
         ];
     }
 
