@@ -6,7 +6,7 @@
     @include('modules.bookings._nav')
 
     <h4 class="fw-bold mb-1">Install</h4>
-    <p class="text-muted mb-4">Share your public booking page — no platform branding on the guest experience.</p>
+    <p class="text-muted mb-4">Share your public booking page or drop the site widget on any page — no platform branding on the guest experience.</p>
 
     <div class="table-card mb-4">
         <h6 class="fw-bold mb-3">Public URL</h6>
@@ -16,6 +16,12 @@
     <div class="table-card mb-4">
         <h6 class="fw-bold mb-3">Link snippet</h6>
         <pre class="bg-dark text-white rounded p-3 small">{{ $snippet }}</pre>
+    </div>
+
+    <div class="table-card mb-4">
+        <h6 class="fw-bold mb-3">Site widget snippet</h6>
+        <p class="text-muted small">Shows a floating Book button with close + display limits from Settings.</p>
+        <pre class="bg-dark text-white rounded p-3 small">{{ $widgetSnippet }}</pre>
     </div>
 
     <div class="table-card">

@@ -40,6 +40,7 @@ class SettingsController extends Controller
             'site' => $site,
             'publicUrl' => $this->sites->publicUrl($site),
             'snippet' => $this->sites->embedSnippet($site),
+            'widgetSnippet' => $this->sites->widgetSnippet($site),
         ]);
     }
 
@@ -50,7 +51,14 @@ class SettingsController extends Controller
             'timezone' => ['required', 'timezone'],
             'brand_color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'allowed_origins' => ['nullable', 'string', 'max:5000'],
+            'widget_enabled' => ['nullable', 'boolean'],
+            'widget_label' => ['nullable', 'string', 'max:80'],
+            'widget_position' => ['nullable', 'in:bottom-right,bottom-left,top-right,top-left'],
+            'frequency_hours' => ['nullable', 'integer', 'min:0', 'max:8760'],
+            'max_displays' => ['nullable', 'integer', 'min:0', 'max:1000'],
         ]);
+
+        $validated['widget_enabled'] = $request->boolean('widget_enabled');
 
         $site = $this->sites->defaultFor(currentTenant());
         $this->sites->saveSettings($site, $validated);

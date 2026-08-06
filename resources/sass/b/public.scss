@@ -1,0 +1,64 @@
+.b-root {
+  --b-color: #0f766e;
+  position: fixed;
+  z-index: 2147483646;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.b-bottom-right {
+  right: 20px;
+  bottom: 20px;
+}
+
+.b-bottom-left {
+  left: 20px;
+  bottom: 20px;
+}
+
+.b-top-right {
+  right: 20px;
+  top: 20px;
+}
+
+.b-top-left {
+  left: 20px;
+  top: 20px;
+}
+
+.b-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 18px;
+  border-radius: 999px;
+  background: var(--b-color);
+  color: #fff;
+  font-weight: 650;
+  font-size: 14px;
+  text-decoration: none;
+  box-shadow: 0 10px 28px #0000002e;
+}
+
+.b-btn:hover {
+  filter: brightness(1.05);
+}
+
+.b-close {
+  border: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #fff;
+  color: #64748b;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 2px 8px #00000022;
+}
+
+.b-close:hover {
+  color: #0f172a;
+}

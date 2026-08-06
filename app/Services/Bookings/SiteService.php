@@ -48,6 +48,14 @@ class SiteService
             $settings['brand_color'] = $data['brand_color'];
         }
 
+        $settings['widget_enabled'] = (bool) ($data['widget_enabled'] ?? false);
+        $settings['widget_label'] = trim((string) ($data['widget_label'] ?? 'Book a time')) ?: 'Book a time';
+        $settings['widget_position'] = in_array($data['widget_position'] ?? '', ['bottom-right', 'bottom-left', 'top-right', 'top-left'], true)
+            ? $data['widget_position']
+            : 'bottom-right';
+        $settings['max_displays'] = max(0, min(1000, (int) ($data['max_displays'] ?? 0)));
+        $settings['frequency_hours'] = max(0, min(8760, (int) ($data['frequency_hours'] ?? 24)));
+
         $site->update([
             'name' => $data['name'] ?? $site->name,
             'timezone' => $data['timezone'] ?? $site->timezone,
@@ -68,5 +76,12 @@ class SiteService
         $url = htmlspecialchars($this->publicUrl($site), ENT_QUOTES, 'UTF-8');
 
         return '<a href="'.$url.'">Book a time</a>';
+    }
+
+    public function widgetSnippet(BookingSite $site): string
+    {
+        $src = htmlspecialchars(url('/b/'.$site->public_key.'.js'), ENT_QUOTES, 'UTF-8');
+
+        return '<script src="'.$src.'" async></script>';
     }
 }

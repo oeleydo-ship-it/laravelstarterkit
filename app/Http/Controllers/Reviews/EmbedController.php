@@ -33,7 +33,18 @@ class EmbedController extends Controller
         $site = $this->site($request); $this->assertOrigin($request, $site);
         $widgets = ReviewWidget::withoutGlobalScopes()->where('review_site_id', $site->id)->where('status', ReviewWidget::STATUS_LIVE)->get()->map(function ($widget) use ($site) {
             $items = Review::withoutGlobalScopes()->where('review_site_id', $site->id)->where('status', Review::STATUS_APPROVED)->where('rating', '>=', $widget->min_rating)->latest()->limit($widget->max_items)->get()->map->toPublicPayload();
-            return ['id' => $widget->id, 'l' => $widget->layout, 's' => $widget->style ?? [], 'i' => $items];
+            $style = $widget->style ?? [];
+
+            return [
+                'id' => $widget->id,
+                'l' => $widget->layout,
+                's' => ['accent_color' => $style['accent_color'] ?? null],
+                'g' => [
+                    'max_displays' => (int) ($style['max_displays'] ?? 0),
+                    'frequency_hours' => (int) ($style['frequency_hours'] ?? 0),
+                ],
+                'i' => $items,
+            ];
         });
         return response()->json(['w' => $widgets], 200, ['Access-Control-Allow-Origin' => '*', 'Cache-Control' => 'no-store']);
     }

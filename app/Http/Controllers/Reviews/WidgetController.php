@@ -18,10 +18,24 @@ class WidgetController extends Controller
     public function destroy(ReviewWidget $widget) { $widget->delete(); return redirect()->route('reviews.widgets.index')->with('success', 'Widget deleted.'); }
     protected function payload(Request $request): array
     {
-        $data = $request->validate(['name' => ['required','string','max:120'], 'layout' => ['required','in:stacked,carousel'], 'min_rating' => ['required','integer','between:1,5'], 'max_items' => ['required','integer','between:1,50'], 'status' => ['required','in:draft,live'], 'accent_color' => ['nullable','regex:/^#[0-9A-Fa-f]{6}$/']]);
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:120'],
+            'layout' => ['required', 'in:stacked,carousel'],
+            'min_rating' => ['required', 'integer', 'between:1,5'],
+            'max_items' => ['required', 'integer', 'between:1,50'],
+            'status' => ['required', 'in:draft,live'],
+            'accent_color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'frequency_hours' => ['nullable', 'integer', 'min:0', 'max:8760'],
+            'max_displays' => ['nullable', 'integer', 'min:0', 'max:1000'],
+        ]);
+
         return [
-            ...collect($data)->except('accent_color')->all(),
-            'style' => ['accent_color' => $data['accent_color'] ?? null],
+            ...collect($data)->except(['accent_color', 'frequency_hours', 'max_displays'])->all(),
+            'style' => [
+                'accent_color' => $data['accent_color'] ?? null,
+                'frequency_hours' => (int) ($data['frequency_hours'] ?? 0),
+                'max_displays' => (int) ($data['max_displays'] ?? 0),
+            ],
         ];
     }
 }

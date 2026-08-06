@@ -163,4 +163,71 @@ class BookingsModuleTest extends TestCase
             'guest_email' => 'bot@example.com',
         ]);
     }
+
+    public function test_widget_boot_includes_display_limits(): void
+    {
+        $tenant = $this->makeTenant();
+        $site = BookingSite::withoutGlobalScopes()->create([
+            'tenant_id' => $tenant->id,
+            'public_key' => 'bookwidgetkeyabcdefghijklmnopqrstu',
+            'name' => 'Demos',
+            'timezone' => 'UTC',
+            'settings' => [
+                'brand_color' => '#0f766e',
+                'widget_enabled' => true,
+                'widget_label' => 'Schedule demo',
+                'max_displays' => 4,
+                'frequency_hours' => 6,
+            ],
+        ]);
+
+        $response = $this->get('/b/'.$site->public_key.'.js')->assertOk();
+        $body = $response->getContent();
+        $this->assertStringContainsString('window.__B=', $body);
+        $this->assertStringContainsString('"max_displays":4', $body);
+        $this->assertStringContainsString('"frequency_hours":6', $body);
+        $this->assertStringContainsString('Schedule demo', $body);
+    }
+
+    public function test_owner_can_save_widget_display_settings(): void
+    {
+        $tenant = $this->makeTenant();
+        $user = $this->makeUser($tenant);
+
+        $this->actingAs($user)
+            ->get(route('bookings.settings'))
+            ->assertOk()
+            ->assertSee('How many times');
+
+        $this->actingAs($user)
+            ->put(route('bookings.settings.update'), [
+                'name' => 'Bookings',
+                'timezone' => 'UTC',
+                'brand_color' => '#0f766e',
+                'allowed_origins' => '',
+                'widget_enabled' => '1',
+                'widget_label' => 'Book now',
+                'widget_position' => 'bottom-left',
+                'frequency_hours' => 8,
+                'max_displays' => 1,
+            ])
+            ->assertRedirect();
+
+        $site = BookingSite::withoutGlobalScopes()->where('tenant_id', $tenant->id)->first();
+        $this->assertTrue((bool) ($site->settings['widget_enabled'] ?? false));
+        $this->assertSame(1, $site->settings['max_displays'] ?? null);
+        $this->assertSame('Book now', $site->settings['widget_label'] ?? null);
+    }
+
+    public function test_public_assets_avoid_vendor_tells(): void
+    {
+        $js = file_get_contents(resource_path('js/b/loader.js'));
+        $css = file_get_contents(resource_path('sass/b/public.scss'));
+        foreach (['uplary', 'powered by', 'recurringpress'] as $needle) {
+            $this->assertStringNotContainsStringIgnoringCase($needle, $js);
+            $this->assertStringNotContainsStringIgnoringCase($needle, $css);
+        }
+        $this->assertStringContainsString('b-close', $js);
+        $this->assertStringContainsString('max_displays', $js);
+    }
 }

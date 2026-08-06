@@ -185,7 +185,7 @@ class EngageModuleTest extends TestCase
             ->get(route('engage.campaigns.create', ['template' => 'video_promo']))
             ->assertOk()
             ->assertSee('Video promo popup')
-            ->assertSee('Max displays');
+            ->assertSee('How many times');
     }
 
     public function test_public_assets_avoid_vendor_tells(): void

@@ -1,1 +1,117 @@
-.f-root{font:16px system-ui,sans-serif;color:#1e293b}.f-card{max-width:520px;padding:24px;border:1px solid #e2e8f0;border-radius:12px;background:#fff;box-shadow:0 2px 8px #00000012}.f-title{margin:0 0 16px;font-size:22px}.f-field{margin:0 0 14px}.f-field label{display:block;margin-bottom:5px;font-weight:600}.f-field input,.f-field textarea,.f-field select{box-sizing:border-box;width:100%;padding:9px;border:1px solid #cbd5e1;border-radius:6px}.f-field textarea{min-height:80px}.f-btn{border:0;border-radius:6px;padding:10px 16px;background:var(--f-color,#2563eb);color:#fff;font-weight:600;cursor:pointer}.f-score{display:flex;gap:4px}.f-score label{padding:6px;border:1px solid #cbd5e1;border-radius:4px;font-size:12px}.f-score input{width:auto}.f-hp{position:absolute!important;left:-10000px!important}
+.f-root {
+  font: 16px system-ui, sans-serif;
+  color: #1e293b;
+  position: relative;
+}
+
+.f-card {
+  position: relative;
+  max-width: 520px;
+  padding: 24px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 2px 8px #00000012;
+}
+
+.f-title {
+  margin: 0 0 16px;
+  font-size: 22px;
+  padding-right: 28px;
+}
+
+.f-field {
+  margin: 0 0 14px;
+}
+
+.f-field label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 600;
+}
+
+.f-field input,
+.f-field textarea,
+.f-field select {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 9px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+}
+
+.f-field textarea {
+  min-height: 80px;
+}
+
+.f-btn {
+  border: 0;
+  border-radius: 6px;
+  padding: 10px 16px;
+  background: var(--f-color, #2563eb);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.f-score {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.f-score label {
+  padding: 6px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.f-score input {
+  width: auto;
+}
+
+.f-hp {
+  position: absolute !important;
+  left: -10000px !important;
+}
+
+.f-close {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  border: 0;
+  background: transparent;
+  color: #64748b;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.85;
+}
+
+.f-close:hover {
+  opacity: 1;
+  color: #0f172a;
+}
+
+.f-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483001;
+  background: rgba(15, 23, 42, 0.48);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  backdrop-filter: blur(2px);
+}
+
+.f-overlay .f-card {
+  width: min(520px, 100%);
+  margin: 0 auto;
+}
+
+.f-thanks {
+  margin: 0;
+  font-weight: 600;
+}

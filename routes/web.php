@@ -57,6 +57,10 @@ use App\Http\Controllers\Bookings\AvailabilityController as BookingsAvailability
 use App\Http\Controllers\Bookings\AppointmentController as BookingsAppointmentController;
 use App\Http\Controllers\Bookings\SettingsController as BookingsSettingsController;
 use App\Http\Controllers\Bookings\PublicController as BookingsPublicController;
+use App\Http\Controllers\SocialProof\DashboardController as SocialProofDashboardController;
+use App\Http\Controllers\SocialProof\EmbedController as SocialProofEmbedController;
+use App\Http\Controllers\SocialProof\EventController as SocialProofEventController;
+use App\Http\Controllers\SocialProof\SettingsController as SocialProofSettingsController;
 use App\Models\Plan;
 
 /*
@@ -307,6 +311,16 @@ Route::middleware(['auth', \App\Http\Middleware\SetTenant::class])->group(functi
         Route::post('settings/rotate', [BookingsSettingsController::class, 'rotateKey'])->name('settings.rotate');
     });
 
+    // Social Proof Module
+    Route::middleware([\App\Http\Middleware\EnsureModuleEnabled::class . ':socialproof'])->prefix('socialproof')->name('socialproof.')->group(function () {
+        Route::get('/', [SocialProofDashboardController::class, 'index'])->name('dashboard');
+        Route::resource('events', SocialProofEventController::class)->except(['show']);
+        Route::get('install', [SocialProofSettingsController::class, 'install'])->name('install');
+        Route::get('settings', [SocialProofSettingsController::class, 'index'])->name('settings');
+        Route::put('settings', [SocialProofSettingsController::class, 'update'])->name('settings.update');
+        Route::post('settings/rotate', [SocialProofSettingsController::class, 'rotateKey'])->name('settings.rotate');
+    });
+
     // ─── Profile ───
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -386,7 +400,15 @@ Route::get('/r/{siteKey}.js', [ReviewsEmbedController::class, 'boot'])
     ->middleware(['throttle:120,1', \App\Http\Middleware\SetTenantFromReviewSiteKey::class, \App\Http\Middleware\AllowPublicFraming::class])
     ->where(['siteKey' => '[A-Za-z0-9]+']);
 
-// Public booking page
+// Public booking page + site widget loader
+Route::get('/b/{siteKey}.js', [BookingsPublicController::class, 'boot'])
+    ->middleware([
+        'throttle:120,1',
+        \App\Http\Middleware\SetTenantFromBookingSiteKey::class,
+        \App\Http\Middleware\AllowPublicFraming::class,
+    ])
+    ->where(['siteKey' => '[A-Za-z0-9]+']);
+
 Route::prefix('b/{siteKey}')
     ->middleware([
         'throttle:60,1',
@@ -399,6 +421,16 @@ Route::prefix('b/{siteKey}')
         Route::get('slots', [BookingsPublicController::class, 'slots']);
         Route::post('book', [BookingsPublicController::class, 'book']);
     });
+
+// White-label social proof purchase / subscribe toasts
+Route::prefix('sp/{siteKey}')->middleware(['throttle:120,1', \App\Http\Middleware\SetTenantFromSocialProofSiteKey::class, \App\Http\Middleware\AllowPublicFraming::class])->where(['siteKey' => '[A-Za-z0-9]+'])->group(function () {
+    Route::options('{any?}', [SocialProofEmbedController::class, 'preflight'])->where('any', '.*');
+    Route::get('c', [SocialProofEmbedController::class, 'config']);
+    Route::post('e', [SocialProofEmbedController::class, 'ingest']);
+});
+Route::get('/sp/{siteKey}.js', [SocialProofEmbedController::class, 'boot'])
+    ->middleware(['throttle:120,1', \App\Http\Middleware\SetTenantFromSocialProofSiteKey::class, \App\Http\Middleware\AllowPublicFraming::class])
+    ->where(['siteKey' => '[A-Za-z0-9]+']);
 
 /*
 |--------------------------------------------------------------------------

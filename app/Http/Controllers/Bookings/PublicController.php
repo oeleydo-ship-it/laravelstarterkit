@@ -5,14 +5,52 @@ namespace App\Http\Controllers\Bookings;
 use App\Http\Controllers\Controller;
 use App\Models\BookingService;
 use App\Services\Bookings\AppointmentService;
+use App\Services\Bookings\PublicAssetService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
 class PublicController extends Controller
 {
-    public function __construct(protected AppointmentService $appointments)
+    public function __construct(
+        protected AppointmentService $appointments,
+        protected PublicAssetService $assets,
+    ) {
+    }
+
+    public function boot(Request $request, string $siteKey)
     {
+        $site = $request->attributes->get('booking_site');
+        $settings = $site->settings ?? [];
+
+        $payload = 'window.__B='.json_encode([
+            'k' => $site->public_key,
+            'u' => url('/b/'.$site->public_key),
+            'c' => $site->brandColor(),
+            'g' => [
+                'enabled' => (bool) ($settings['widget_enabled'] ?? true),
+                'label' => (string) ($settings['widget_label'] ?? 'Book a time'),
+                'position' => (string) ($settings['widget_position'] ?? 'bottom-right'),
+                'max_displays' => (int) ($settings['max_displays'] ?? 0),
+                'frequency_hours' => (int) ($settings['frequency_hours'] ?? 24),
+            ],
+        ], JSON_UNESCAPED_SLASHES).';';
+
+        if ($css = $this->assets->stylesheet()) {
+            $payload .= '(function(){var s=document.createElement("style");s.textContent='
+                .json_encode($css, JSON_UNESCAPED_SLASHES)
+                .';document.head.appendChild(s);})();';
+        }
+
+        return response(
+            $payload."\n".$this->assets->javascript(),
+            200,
+            [
+                'Content-Type' => 'application/javascript; charset=utf-8',
+                'Cache-Control' => 'public, max-age=120',
+                'Access-Control-Allow-Origin' => '*',
+            ]
+        );
     }
 
     public function show(Request $request)

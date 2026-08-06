@@ -72,7 +72,8 @@ class FormsModuleTest extends TestCase
         $this->actingAs($user)
             ->get(route('forms.forms.create', ['template' => 'contact_lead']))
             ->assertOk()
-            ->assertSee('Contact us');
+            ->assertSee('Contact us')
+            ->assertSee('How many times');
 
         $this->actingAs($user)
             ->post(route('forms.forms.store'), [
@@ -80,6 +81,10 @@ class FormsModuleTest extends TestCase
                 'type' => 'lead',
                 'status' => 'draft',
                 'thank_you' => 'Thanks!',
+                'display_mode' => 'popup',
+                'delay_ms' => 500,
+                'frequency_hours' => 12,
+                'max_displays' => 2,
                 'fields' => [
                     ['key' => 'name', 'label' => 'Name', 'type' => 'text', 'required' => '1'],
                     ['key' => 'email', 'label' => 'Email', 'type' => 'email', 'required' => '1'],
@@ -91,6 +96,10 @@ class FormsModuleTest extends TestCase
             'tenant_id' => $tenant->id,
             'name' => 'Contact us',
         ]);
+
+        $form = Form::where('tenant_id', $tenant->id)->where('name', 'Contact us')->first();
+        $this->assertSame('popup', $form->settings['display_mode'] ?? null);
+        $this->assertSame(2, $form->settings['max_displays'] ?? null);
     }
 
     public function test_public_submit(): void
@@ -112,10 +121,19 @@ class FormsModuleTest extends TestCase
                 ['key' => 'name', 'label' => 'Name', 'type' => 'text', 'required' => true],
                 ['key' => 'email', 'label' => 'Email', 'type' => 'email', 'required' => true],
             ],
+            'settings' => [
+                'display_mode' => 'inline',
+                'max_displays' => 5,
+                'frequency_hours' => 24,
+            ],
             'thank_you' => 'Thanks!',
         ]);
 
         $this->get('/f/'.$site->public_key.'.js')->assertOk();
+
+        $this->getJson('/f/'.$site->public_key.'/c')
+            ->assertOk()
+            ->assertJsonPath('i.0.s.max_displays', 5);
 
         $this->postJson('/f/'.$site->public_key.'/s', [
             'i' => $form->id,
@@ -139,5 +157,7 @@ class FormsModuleTest extends TestCase
             $this->assertStringNotContainsStringIgnoringCase($needle, $css);
         }
         $this->assertStringContainsString('.f-root', $css);
+        $this->assertStringContainsString('max_displays', $js);
+        $this->assertStringContainsString('f-close', $js);
     }
 }

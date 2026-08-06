@@ -73,11 +73,20 @@ class ReviewsModuleTest extends TestCase
             'min_rating' => 1,
             'max_items' => 6,
             'status' => 'live',
-            'style' => [],
+            'style' => [
+                'accent_color' => '#f59e0b',
+                'max_displays' => 3,
+                'frequency_hours' => 12,
+            ],
         ]);
 
         $this->get('/r/'.$site->public_key.'.js')->assertOk();
         $this->get('/r/'.$site->public_key.'/write')->assertOk();
+
+        $this->getJson('/r/'.$site->public_key.'/c')
+            ->assertOk()
+            ->assertJsonPath('w.0.g.max_displays', 3)
+            ->assertJsonPath('w.0.g.frequency_hours', 12);
 
         $this->postJson('/r/'.$site->public_key.'/s', [
             'rating' => 5,
@@ -103,5 +112,7 @@ class ReviewsModuleTest extends TestCase
             $this->assertStringNotContainsStringIgnoringCase($needle, $css);
         }
         $this->assertStringContainsString('.r-', $css);
+        $this->assertStringContainsString('r-close', $js);
+        $this->assertStringContainsString('max_displays', $js);
     }
 }

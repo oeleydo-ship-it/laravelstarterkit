@@ -33,6 +33,10 @@ class FormRequest extends BaseFormRequest
         }
 
         $this->merge(['fields' => array_values($fields)]);
+
+        if ($this->has('closable')) {
+            $this->merge(['closable' => $this->boolean('closable')]);
+        }
     }
 
     public function rules(): array
@@ -49,6 +53,11 @@ class FormRequest extends BaseFormRequest
             'fields.*.options' => ['nullable', 'array'],
             'fields.*.options.*' => ['nullable', 'string', 'max:120'],
             'thank_you' => ['nullable', 'string', 'max:2000'],
+            'display_mode' => ['nullable', Rule::in(['inline', 'popup'])],
+            'delay_ms' => ['nullable', 'integer', 'min:0', 'max:120000'],
+            'frequency_hours' => ['nullable', 'integer', 'min:0', 'max:8760'],
+            'max_displays' => ['nullable', 'integer', 'min:0', 'max:1000'],
+            'closable' => ['nullable', 'boolean'],
         ];
     }
 
@@ -64,7 +73,22 @@ class FormRequest extends BaseFormRequest
             'options' => array_values(array_filter($f['options'] ?? [])),
         ], $data['fields']));
 
-        $data['settings'] = $this->input('settings', []) ?: [];
+        $data['settings'] = [
+            'display_mode' => $data['display_mode'] ?? 'inline',
+            'delay_ms' => (int) ($data['delay_ms'] ?? 0),
+            'frequency_hours' => (int) ($data['frequency_hours'] ?? 0),
+            'max_displays' => (int) ($data['max_displays'] ?? 0),
+            'closable' => (bool) ($data['closable'] ?? false),
+        ];
+
+        unset(
+            $data['display_mode'],
+            $data['delay_ms'],
+            $data['frequency_hours'],
+            $data['max_displays'],
+            $data['closable'],
+        );
+
         $data['thank_you'] = $data['thank_you'] ?? '';
 
         return $data;

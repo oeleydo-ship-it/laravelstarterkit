@@ -180,7 +180,8 @@
                     </div>
                 </div>
 
-                <h6>Display &amp; targeting</h6>
+                <h6>Frequency on external site</h6>
+                <p class="text-muted small mb-3">Limits how often this campaign shows for each visitor on your website (saved in their browser).</p>
                 <div class="row g-3">
                     <div class="col-md-4">
                         <label class="form-label">URL contains</label>
@@ -191,16 +192,16 @@
                         <input type="number" name="delay_ms" class="form-control" min="0" value="{{ old('delay_ms', $g['delay_ms'] ?? 0) }}">
                     </div>
                     <div class="col-md-2">
-                        <label class="form-label">Cooldown between (hrs)</label>
+                        <label class="form-label">Repeat every (hrs)</label>
                         <input type="number" name="frequency_hours" class="form-control" min="0"
                                value="{{ old('frequency_hours', $g['frequency_hours'] ?? 24) }}"
                                title="Hours before showing again after a display. 0 = every eligible visit.">
                     </div>
                     <div class="col-md-2">
-                        <label class="form-label">Max displays</label>
+                        <label class="form-label">How many times</label>
                         <input type="number" name="max_displays" class="form-control" min="0" max="1000"
                                value="{{ old('max_displays', $g['max_displays'] ?? 0) }}"
-                               title="How many times to show across reloads. 0 = unlimited.">
+                               title="Total times to show on the external site. 0 = unlimited.">
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">Device</label>
@@ -212,8 +213,8 @@
                     </div>
                     <div class="col-12">
                         <p class="form-text mb-0">
-                            <strong>Max displays</strong> counts each page load that shows the campaign (reloads included).
-                            Use <code>1</code> for once ever, or <code>0</code> for unlimited. Pair with “Repeat between” to space shows out.
+                            <strong>How many times</strong> = total shows per visitor (<code>1</code> = once ever, <code>0</code> = unlimited).
+                            <strong>Repeat every</strong> = cooldown hours between shows (<code>0</code> = no cooldown).
                         </p>
                     </div>
                 </div>

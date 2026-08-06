@@ -104,6 +104,59 @@
             <textarea class="form-control" name="thank_you" rows="2">{{ old('thank_you', $form->thank_you) }}</textarea>
         </div>
 
+        @php
+            $s = $form->settings ?? [];
+            $displayMode = old('display_mode', $s['display_mode'] ?? 'inline');
+            $delayMs = old('delay_ms', $s['delay_ms'] ?? 0);
+            $frequencyHours = old('frequency_hours', $s['frequency_hours'] ?? 0);
+            $maxDisplays = old('max_displays', $s['max_displays'] ?? 0);
+            $closable = old('closable', ! empty($s['closable']));
+        @endphp
+
+        <hr class="my-4">
+        <h6 class="fw-bold">Frequency on external site</h6>
+        <p class="text-muted small">Limits how often this form shows for each visitor on your website (saved in their browser).</p>
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Display mode</label>
+                <select name="display_mode" class="form-select">
+                    @foreach(['inline' => 'Inline mount', 'popup' => 'Popup overlay'] as $value => $label)
+                        <option value="{{ $value }}" @selected($displayMode === $value)>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Delay (ms)</label>
+                <input type="number" name="delay_ms" class="form-control" min="0" max="120000"
+                       value="{{ $delayMs }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Repeat every (hrs)</label>
+                <input type="number" name="frequency_hours" class="form-control" min="0" max="8760"
+                       value="{{ $frequencyHours }}"
+                       title="Hours before showing again. 0 = every eligible visit.">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">How many times</label>
+                <input type="number" name="max_displays" class="form-control" min="0" max="1000"
+                       value="{{ $maxDisplays }}"
+                       title="Total times to show on the external site. 0 = unlimited.">
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <div class="form-check mb-2">
+                    <input type="checkbox" class="form-check-input" name="closable" value="1" id="closable"
+                           @checked($closable || $displayMode === 'popup')>
+                    <label class="form-check-label" for="closable">Show close button (inline)</label>
+                </div>
+            </div>
+            <div class="col-12">
+                <p class="form-text mb-0">
+                    <strong>How many times</strong> = total shows per visitor (<code>1</code> = once ever, <code>0</code> = unlimited).
+                    <strong>Repeat every</strong> = cooldown hours between shows (<code>0</code> = no cooldown). Popup mode always has a close button.
+                </p>
+            </div>
+        </div>
+
         <div class="d-flex justify-content-between mt-4">
             @if($form->exists)
                 <button form="delete-form" type="submit" class="btn btn-outline-danger"

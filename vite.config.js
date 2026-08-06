@@ -14,6 +14,8 @@ export default defineConfig({
                 'resources/js/x/loader.js',
                 'resources/js/f/loader.js',
                 'resources/js/r/loader.js',
+                'resources/js/b/loader.js',
+                'resources/js/sp/loader.js',
             ],
             refresh: true,
         }),
@@ -23,6 +25,12 @@ export default defineConfig({
         rollupOptions: {
             output: {
                 entryFileNames: (chunk) => {
+                    if (chunk.facadeModuleId?.includes('/sp/loader')) {
+                        return 'assets/sp-[hash].js';
+                    }
+                    if (chunk.facadeModuleId?.includes('/b/loader')) {
+                        return 'assets/b-[hash].js';
+                    }
                     if (chunk.facadeModuleId?.includes('/r/loader')) {
                         return 'assets/r-[hash].js';
                     }
@@ -37,6 +45,12 @@ export default defineConfig({
                 chunkFileNames: 'assets/[name]-[hash].js',
                 assetFileNames: (asset) => {
                     const name = asset.name || '';
+                    if (name.startsWith('sp-') || /[/\\]sp[/\\]/.test(String(asset.originalFileName || ''))) {
+                        return 'assets/sp-[hash][extname]';
+                    }
+                    if (name.startsWith('b-') || /[/\\]b[/\\]/.test(String(asset.originalFileName || ''))) {
+                        return 'assets/b-[hash][extname]';
+                    }
                     if (name.startsWith('r-') || /[/\\]r[/\\]/.test(String(asset.originalFileName || ''))) {
                         return 'assets/r-[hash][extname]';
                     }
