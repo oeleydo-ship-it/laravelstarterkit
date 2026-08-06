@@ -17,6 +17,7 @@ use App\Models\BookingAppointment;
 use App\Models\BookingService;
 use App\Models\Review;
 use App\Models\ReviewWidget;
+use App\Models\SocialProofEvent;
 use App\Models\Ticket;
 use App\Policies\ChatArticlePolicy;
 use App\Policies\ChatCannedResponsePolicy;
@@ -32,6 +33,7 @@ use App\Policies\BookingAppointmentPolicy;
 use App\Policies\BookingServicePolicy;
 use App\Policies\ReviewPolicy;
 use App\Policies\ReviewWidgetPolicy;
+use App\Policies\SocialProofEventPolicy;
 use App\Policies\TicketPolicy;
 use App\Services\Chat\Ai\AiProvider;
 use App\Services\Chat\AiSettingsService;
@@ -76,6 +78,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(ReviewWidget::class, ReviewWidgetPolicy::class);
         Gate::policy(BookingService::class, BookingServicePolicy::class);
         Gate::policy(BookingAppointment::class, BookingAppointmentPolicy::class);
+        Gate::policy(SocialProofEvent::class, SocialProofEventPolicy::class);
 
         // Broadcasting auth: authenticated agents resolve normally; unauthenticated
         // widget visitors identify themselves via a `chat_visitor_token` param so

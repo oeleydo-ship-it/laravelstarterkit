@@ -31,7 +31,8 @@
             || ($tenant->isModuleEnabled('engage') && auth()->user()->canAccessModule('engage'))
             || ($tenant->isModuleEnabled('forms') && auth()->user()->canAccessModule('forms'))
             || ($tenant->isModuleEnabled('reviews') && auth()->user()->canAccessModule('reviews'))
-            || ($tenant->isModuleEnabled('bookings') && auth()->user()->canAccessModule('bookings')))
+            || ($tenant->isModuleEnabled('bookings') && auth()->user()->canAccessModule('bookings'))
+            || ($tenant->isModuleEnabled('socialproof') && auth()->user()->canAccessModule('socialproof')))
             <div class="nav-section">
                 <div class="nav-section-title">Modules</div>
 
@@ -116,6 +117,17 @@
                             <line x1="3" y1="10" x2="21" y2="10" />
                         </svg>
                         Bookings
+                    </a>
+                @endif
+
+                @if($tenant->isModuleEnabled('socialproof') && auth()->user()->canAccessModule('socialproof'))
+                    <a href="{{ route('socialproof.dashboard') }}" class="nav-link {{ request()->routeIs('socialproof.*') ? 'active' : '' }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                            <circle cx="18" cy="6" r="3" />
+                        </svg>
+                        Social Proof
                     </a>
                 @endif
             </div>

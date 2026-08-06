@@ -60,6 +60,12 @@ class ModuleCatalog
                 'description' => 'Services, availability, and public appointment booking for demos and support.',
                 'enabled_by_default' => false,
             ],
+            [
+                'key' => 'socialproof',
+                'name' => 'Social Proof',
+                'description' => 'Recent purchase and subscribe notification toasts — live and fake — with reload display limits.',
+                'enabled_by_default' => false,
+            ],
         ];
     }
 

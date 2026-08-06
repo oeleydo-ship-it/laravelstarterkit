@@ -20,6 +20,8 @@ class Privileges
     public const REVIEWS_MANAGE = 'reviews.manage';
     public const BOOKINGS_VIEW = 'bookings.view';
     public const BOOKINGS_MANAGE = 'bookings.manage';
+    public const SOCIALPROOF_VIEW = 'socialproof.view';
+    public const SOCIALPROOF_MANAGE = 'socialproof.manage';
     public const TEAM_MANAGE = 'team.manage';
     public const MODULES_MANAGE = 'modules.manage';
     public const BILLING_MANAGE = 'billing.manage';
@@ -44,6 +46,8 @@ class Privileges
             self::REVIEWS_MANAGE => 'Manage reviews',
             self::BOOKINGS_VIEW => 'View bookings',
             self::BOOKINGS_MANAGE => 'Manage bookings',
+            self::SOCIALPROOF_VIEW => 'View social proof',
+            self::SOCIALPROOF_MANAGE => 'Manage social proof',
             self::TEAM_MANAGE => 'Manage team & groups',
             self::MODULES_MANAGE => 'Manage modules',
             self::BILLING_MANAGE => 'Manage billing',
@@ -67,6 +71,7 @@ class Privileges
             'Forms' => [self::FORMS_VIEW, self::FORMS_MANAGE],
             'Reviews' => [self::REVIEWS_VIEW, self::REVIEWS_MANAGE],
             'Bookings' => [self::BOOKINGS_VIEW, self::BOOKINGS_MANAGE],
+            'Social Proof' => [self::SOCIALPROOF_VIEW, self::SOCIALPROOF_MANAGE],
             'Workspace' => [self::TEAM_MANAGE, self::MODULES_MANAGE, self::BILLING_MANAGE, self::SETTINGS_MANAGE],
         ];
     }
@@ -85,6 +90,7 @@ class Privileges
                 self::FORMS_VIEW,
                 self::REVIEWS_VIEW,
                 self::BOOKINGS_VIEW,
+                self::SOCIALPROOF_VIEW,
             ],
             default => [],
         };

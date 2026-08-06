@@ -1,0 +1,117 @@
+/* Public social-proof toasts — class prefix sp- only. */
+.sp-root {
+  all: initial;
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #0f172a;
+  box-sizing: border-box;
+}
+
+.sp-root *,
+.sp-root *::before,
+.sp-root *::after {
+  box-sizing: border-box;
+}
+
+.sp-toast {
+  --sp-accent: #0f766e;
+  position: fixed;
+  z-index: 2147483002;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.18);
+  padding: 10px 34px 10px 10px;
+  max-width: min(360px, calc(100vw - 24px));
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  animation: sp-in 0.35s ease;
+}
+
+.sp-toast.sp-out {
+  animation: sp-out 0.28s ease forwards;
+}
+
+.sp-bl { bottom: 18px; left: 18px; }
+.sp-br { bottom: 18px; right: 18px; }
+.sp-tl { top: 18px; left: 18px; }
+.sp-tr { top: 18px; right: 18px; }
+
+.sp-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-weight: 700;
+  flex: 0 0 auto;
+  overflow: hidden;
+  background: var(--sp-accent);
+}
+
+.sp-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.sp-text { min-width: 0; }
+
+.sp-line {
+  color: #0f172a;
+  font-size: 13px;
+}
+
+.sp-item {
+  color: var(--sp-accent);
+  font-weight: 650;
+  text-decoration: none;
+}
+
+a.sp-item:hover { text-decoration: underline; }
+
+.sp-meta {
+  margin-top: 2px;
+  color: #64748b;
+  font-size: 11px;
+}
+
+.sp-close {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  border: 0;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.sp-close:hover { color: #334155; }
+
+@keyframes sp-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes sp-out {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(8px); }
+}
+
+@media (max-width: 480px) {
+  .sp-toast {
+    left: 12px !important;
+    right: 12px !important;
+    max-width: none;
+    width: auto;
+  }
+  .sp-bl, .sp-br { bottom: 12px; }
+  .sp-tl, .sp-tr { top: 12px; }
+}
