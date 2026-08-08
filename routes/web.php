@@ -67,6 +67,12 @@ use App\Http\Controllers\Autoblog\PostController as AutoblogPostController;
 use App\Http\Controllers\Autoblog\DestinationController as AutoblogDestinationController;
 use App\Http\Controllers\Autoblog\SettingsController as AutoblogSettingsController;
 use App\Models\Plan;
+use App\Http\Controllers\SetupController;
+
+Route::middleware('guest')->group(function () {
+    Route::get('/setup', [SetupController::class, 'create'])->name('setup.create');
+    Route::post('/setup', [SetupController::class, 'store'])->name('setup.store');
+});
 
 /*
 |--------------------------------------------------------------------------
