@@ -40,6 +40,8 @@ use App\Services\Chat\AiSettingsService;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use App\Models\SystemSetting;
+use Illuminate\Support\Facades\Schema;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -62,6 +64,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (Schema::hasTable('system_settings')) {
+            config([
+                'app.name' => SystemSetting::get('app_name', config('app.name')),
+                'app.timezone' => SystemSetting::get('timezone', config('app.timezone')),
+                'cashier.key' => SystemSetting::get('stripe_key', config('cashier.key')),
+                'cashier.secret' => SystemSetting::get('stripe_secret', config('cashier.secret')),
+                'cashier.webhook.secret' => SystemSetting::get('stripe_webhook_secret', config('cashier.webhook.secret')),
+            ]);
+        }
         // Register policies
         Gate::policy(Client::class, ClientPolicy::class);
         Gate::policy(Ticket::class, TicketPolicy::class);

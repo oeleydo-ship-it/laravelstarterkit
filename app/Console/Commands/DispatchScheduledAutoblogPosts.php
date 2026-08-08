@@ -1,0 +1,4 @@
+<?php
+namespace App\Console\Commands;
+use App\Jobs\PublishAutoblogPost;use App\Models\AutoblogPost;use Illuminate\Console\Command;
+class DispatchScheduledAutoblogPosts extends Command {protected $signature='autoblog:dispatch-scheduled';protected $description='Queue due Autoblog posts for publishing';public function handle():int{$count=0;AutoblogPost::withoutGlobalScopes()->where('status','scheduled')->where(fn($q)=>$q->whereNotNull('destination_id')->orWhereNotNull('destination_url'))->where('scheduled_at','<=',now())->orderBy('id')->chunkById(100,function($posts)use(&$count){foreach($posts as $post){$updated=AutoblogPost::withoutGlobalScopes()->whereKey($post->id)->where('status','scheduled')->update(['status'=>'publish_queued']);if($updated){PublishAutoblogPost::dispatch($post->id);$count++;}}});$this->info("Queued {$count} scheduled Autoblog post(s).");return self::SUCCESS;}}

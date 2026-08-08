@@ -1,0 +1,5 @@
+@extends('layouts.superadmin')
+@section('title', 'Workspaces')
+@section('content')
+<div class="d-flex justify-content-between mb-4"><div><h4>Workspace Control</h4><p class="text-muted">Manage plans and modules for every tenant.</p></div></div><form class="mb-3"><input class="form-control" name="search" value="{{ request('search') }}" placeholder="Search workspaces"></form><div class="table-card"><table class="table"><thead><tr><th>Workspace</th><th>Plan</th><th>Users</th><th>Trial</th><th></th></tr></thead><tbody>@foreach($tenants as $tenant)<tr><td><strong>{{ $tenant->name }}</strong><div class="small text-muted">{{ $tenant->slug }}</div></td><td>{{ $tenant->plan?->name ?? 'No plan' }}</td><td>{{ $tenant->users_count }}</td><td>{{ $tenant->trial_ends_at?->format('M j, Y') ?? '—' }}</td><td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{{ route('superadmin.tenants.edit',$tenant) }}">Manage</a></td></tr>@endforeach</tbody></table></div><div class="mt-3">{{ $tenants->links() }}</div>
+@endsection

@@ -1,41 +1,5 @@
 @extends('layouts.auth')
-
-@section('title', 'Register')
-
+@section('title','Create account')
 @section('content')
-    <h4 class="fw-bold mb-1">Create your account</h4>
-    <p class="text-muted mb-4">Get started with your SaaS workspace.</p>
-
-    <form method="POST" action="{{ route('register') }}">
-        @csrf
-
-        <div class="mb-3">
-            <label for="name" class="form-label fw-medium">Full Name</label>
-            <input id="name" type="text" class="form-control @error('name') is-invalid @enderror" name="name"
-                value="{{ old('name') }}" required autofocus>
-        </div>
-
-        <div class="mb-3">
-            <label for="email" class="form-label fw-medium">Email Address</label>
-            <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email"
-                value="{{ old('email') }}" required>
-        </div>
-
-        <div class="mb-3">
-            <label for="password" class="form-label fw-medium">Password</label>
-            <input id="password" type="password" class="form-control @error('password') is-invalid @enderror"
-                name="password" required>
-        </div>
-
-        <div class="mb-4">
-            <label for="password-confirm" class="form-label fw-medium">Confirm Password</label>
-            <input id="password-confirm" type="password" class="form-control" name="password_confirmation" required>
-        </div>
-
-        <button type="submit" class="btn btn-primary w-100 py-2 fw-medium mb-3">Create Account</button>
-
-        <p class="text-center text-muted small mb-0">
-            Already have an account? <a href="{{ route('login') }}" class="text-decoration-none">Sign in</a>
-        </p>
-    </form>
+<h1 class="auth-title">Create your account</h1><p class="auth-subtitle">Already have an account? <a href="{{ route('login') }}">Log in</a></p><a class="social-btn" href="{{ route('auth.google.redirect') }}"><svg width="19" height="19" viewBox="0 0 24 24" fill="white"><path d="M21.6 12.23c0-.71-.06-1.4-.18-2.07H12v3.92h5.38a4.6 4.6 0 0 1-2 3.02v2.54h3.24c1.9-1.75 2.98-4.33 2.98-7.41Z"/><path opacity=".75" d="M12 22c2.7 0 4.97-.9 6.63-2.36l-3.24-2.54c-.9.6-2.05.96-3.39.96-2.61 0-4.82-1.76-5.61-4.13H3.04v2.62A10 10 0 0 0 12 22Z"/><path opacity=".55" d="M6.39 13.93A6 6 0 0 1 6.08 12c0-.67.12-1.32.31-1.93V7.45H3.04A10 10 0 0 0 2 12c0 1.61.39 3.13 1.04 4.55l3.35-2.62Z"/><path opacity=".85" d="M12 5.94c1.47 0 2.79.5 3.82 1.5l2.87-2.87A9.63 9.63 0 0 0 12 2a10 10 0 0 0-8.96 5.45l3.35 2.62C7.18 7.7 9.39 5.94 12 5.94Z"/></svg>Continue with Google</a><div class="auth-divider">or</div><form method="POST" action="{{ route('register') }}">@csrf<div class="mb-3"><label class="form-label" for="name">Full name</label><input id="name" type="text" name="name" value="{{ old('name') }}" class="form-control" required autofocus autocomplete="name" placeholder="Your name"></div><div class="mb-3"><label class="form-label" for="email">Email</label><input id="email" type="email" name="email" value="{{ old('email') }}" class="form-control" required autocomplete="email" placeholder="you@company.com"></div><div class="mb-3"><label class="form-label" for="password">Password</label><div class="password-wrap"><input id="password" type="password" name="password" class="form-control" required autocomplete="new-password"><button type="button" class="password-toggle" data-password-toggle="password" aria-label="Show password">◉</button></div><div class="password-rules"><span>At least 8 characters</span><span>Use letters, numbers, and symbols</span></div></div><div class="mb-3"><label class="form-label" for="password-confirm">Confirm password</label><input id="password-confirm" type="password" name="password_confirmation" class="form-control" required autocomplete="new-password"></div><button class="auth-submit" type="submit">Create account</button></form><p class="auth-legal">By signing up, you agree to our <a href="#">Terms</a>, <a href="#">Acceptable Use</a>, and <a href="#">Privacy Policy</a>.</p>
 @endsection

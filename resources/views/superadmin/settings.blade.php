@@ -65,6 +65,12 @@
                                     @error('footer_text') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
 
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6"><label class="form-label fw-medium">Timezone</label><select name="timezone" class="form-select">@foreach(timezone_identifiers_list() as $timezone)<option value="{{ $timezone }}" @selected(old('timezone', $general['timezone'] ?? config('app.timezone')) === $timezone)>{{ $timezone }}</option>@endforeach</select></div>
+                                    <div class="col-md-6"><label class="form-label fw-medium">Default Currency</label><input name="currency" maxlength="3" class="form-control text-uppercase" value="{{ old('currency', $general['currency'] ?? 'USD') }}"></div>
+                                </div>
+                                <div class="form-check form-switch mb-4"><input type="hidden" name="allow_registration" value="0"><input class="form-check-input" type="checkbox" name="allow_registration" value="1" id="allow_registration" @checked(old('allow_registration', $general['allow_registration'] ?? '1') == '1')><label class="form-check-label" for="allow_registration">Allow public registration</label></div>
+
                                 <button type="submit" class="btn btn-primary">Save General Settings</button>
                             </form>
                         </div>
@@ -82,6 +88,7 @@
                                 @csrf
                                 @method('PUT')
                                 <input type="hidden" name="tab" value="stripe">
+                                <div class="row g-3 mb-3"><div class="col-md-6"><label class="form-label fw-medium">Mode</label><select name="stripe_mode" class="form-select"><option value="test" @selected(($stripe['stripe_mode'] ?? 'test') === 'test')>Test</option><option value="live" @selected(($stripe['stripe_mode'] ?? 'test') === 'live')>Live</option></select></div><div class="col-md-6"><label class="form-label fw-medium">Billing Currency</label><input name="billing_currency" maxlength="3" class="form-control text-uppercase" value="{{ old('billing_currency', $stripe['billing_currency'] ?? 'USD') }}"></div></div>
 
                                 <div class="mb-3">
                                     <label for="stripe_key" class="form-label fw-medium">Publishable Key</label>
@@ -98,8 +105,7 @@
                                     <input type="password"
                                         class="form-control font-monospace @error('stripe_secret') is-invalid @enderror"
                                         id="stripe_secret" name="stripe_secret"
-                                        value="{{ old('stripe_secret', $stripe['stripe_secret'] ?? '') }}"
-                                        placeholder="sk_test_...">
+                                        value="" placeholder="{{ !empty($stripe['stripe_secret']) ? 'Saved — leave blank to keep' : 'sk_test_...' }}">
                                     @error('stripe_secret') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                     <div class="form-text">Your secret key is stored securely and never displayed.</div>
                                 </div>
@@ -109,8 +115,7 @@
                                     <input type="password"
                                         class="form-control font-monospace @error('stripe_webhook_secret') is-invalid @enderror"
                                         id="stripe_webhook_secret" name="stripe_webhook_secret"
-                                        value="{{ old('stripe_webhook_secret', $stripe['stripe_webhook_secret'] ?? '') }}"
-                                        placeholder="whsec_...">
+                                        value="" placeholder="{{ !empty($stripe['stripe_webhook_secret']) ? 'Saved — leave blank to keep' : 'whsec_...' }}">
                                     @error('stripe_webhook_secret') <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>

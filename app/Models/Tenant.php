@@ -101,6 +101,9 @@ class Tenant extends Model
         return $this->hasMany(ChatApiToken::class);
     }
 
+    public function autoblogPosts() { return $this->hasMany(AutoblogPost::class); }
+    public function autoblogDestinations() { return $this->hasMany(AutoblogDestination::class); }
+
     // ─── Helpers ───
 
     public function isModuleEnabled(string $moduleKey): bool

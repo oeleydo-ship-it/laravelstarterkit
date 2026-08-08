@@ -235,6 +235,8 @@
         }
     </style>
 
+    @include('partials.product-theme')
+
     @stack('styles')
 </head>
 

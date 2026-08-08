@@ -27,6 +27,13 @@ class LoginController extends Controller
      */
     protected $redirectTo = '/dashboard';
 
+    protected function redirectTo(): string
+    {
+        return auth()->user()?->is_superadmin
+            ? route('superadmin.dashboard')
+            : route('dashboard');
+    }
+
     /**
      * Create a new controller instance.
      *

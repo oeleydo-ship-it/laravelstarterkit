@@ -10,6 +10,10 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        if (auth()->user()->is_superadmin) {
+            return redirect()->route('superadmin.dashboard');
+        }
+
         $tenant = currentTenant();
 
         $totalUsers = $tenant->users()->where('status', 'active')->count();

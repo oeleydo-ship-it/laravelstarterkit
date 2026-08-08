@@ -149,7 +149,7 @@ class AiSettingsService
     public function makeProvider(?Tenant $tenant = null): AiProvider
     {
         $settings = $this->for($tenant);
-        $maxTokens = (int) config('chat.ai.max_tokens', 600);
+        $maxTokens = (int) config('chat.ai.max_tokens', 8192);
 
         return match ($settings['provider']) {
             'openai' => new OpenAiCompatibleAiProvider([

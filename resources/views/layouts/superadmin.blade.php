@@ -220,6 +220,7 @@
             }
         }
     </style>
+    @include('partials.product-theme')
     @stack('styles')
 </head>
 
@@ -227,9 +228,13 @@
     {{-- Sidebar --}}
     <div class="sidebar">
         <div class="brand">
+            @if(\App\Models\SystemSetting::get('app_logo'))
+                <img src="{{ asset('storage/'.\App\Models\SystemSetting::get('app_logo')) }}" alt="Logo" style="max-width:32px;max-height:32px;object-fit:contain">
+            @else
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="2">
                 <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
             </svg>
+            @endif
             {{ config('app.name', 'SaaS Kit') }}
             <span class="badge-sa">Admin</span>
         </div>
@@ -246,6 +251,8 @@
                 </svg>
                 Dashboard
             </a>
+            <a href="{{ route('superadmin.tenants.index') }}" class="nav-link {{ request()->routeIs('superadmin.tenants.*') ? 'active' : '' }}">Workspaces</a>
+            <a href="{{ route('superadmin.users.index') }}" class="nav-link {{ request()->routeIs('superadmin.users.*') ? 'active' : '' }}">Users</a>
             <a href="{{ route('superadmin.plans.index') }}"
                 class="nav-link {{ request()->routeIs('superadmin.plans.*') ? 'active' : '' }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

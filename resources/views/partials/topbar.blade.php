@@ -23,7 +23,7 @@
         <div class="dropdown">
             <button class="btn btn-sm btn-light dropdown-toggle d-flex align-items-center gap-2" type="button"
                 data-bs-toggle="dropdown">
-                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+                <div class="auth-mark-small text-white"
                     style="width:32px;height:32px;font-size:0.8rem;">
                     {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}
                 </div>

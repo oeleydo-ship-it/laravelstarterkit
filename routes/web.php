@@ -15,6 +15,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StripeWebhookController;
+use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\SuperAdmin;
 use App\Http\Controllers\Chat\ArticleController as ChatArticleController;
 use App\Http\Controllers\Chat\AssistController as ChatAssistController;
@@ -61,6 +62,10 @@ use App\Http\Controllers\SocialProof\DashboardController as SocialProofDashboard
 use App\Http\Controllers\SocialProof\EmbedController as SocialProofEmbedController;
 use App\Http\Controllers\SocialProof\EventController as SocialProofEventController;
 use App\Http\Controllers\SocialProof\SettingsController as SocialProofSettingsController;
+use App\Http\Controllers\Autoblog\DashboardController as AutoblogDashboardController;
+use App\Http\Controllers\Autoblog\PostController as AutoblogPostController;
+use App\Http\Controllers\Autoblog\DestinationController as AutoblogDestinationController;
+use App\Http\Controllers\Autoblog\SettingsController as AutoblogSettingsController;
 use App\Models\Plan;
 
 /*
@@ -98,6 +103,10 @@ Route::prefix('email')->name('email.')->middleware('throttle:120,1')->group(func
 */
 
 Auth::routes();
+Route::middleware('guest')->group(function () {
+    Route::get('/auth/google', [GoogleController::class, 'redirect'])->name('auth.google.redirect');
+    Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name('auth.google.callback');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -321,6 +330,24 @@ Route::middleware(['auth', \App\Http\Middleware\SetTenant::class])->group(functi
         Route::post('settings/rotate', [SocialProofSettingsController::class, 'rotateKey'])->name('settings.rotate');
     });
 
+    // AI Autoblog Module
+    Route::middleware([\App\Http\Middleware\EnsureModuleEnabled::class . ':autoblog'])->prefix('autoblog')->name('autoblog.')->group(function () {
+        Route::get('/', [AutoblogDashboardController::class, 'index'])->name('dashboard');
+        Route::post('posts', [AutoblogPostController::class, 'store'])->name('posts.store');
+        Route::get('post-library', [AutoblogPostController::class, 'index'])->name('posts.index');
+        Route::get('posts/{post}', [AutoblogPostController::class, 'show'])->name('posts.show');
+        Route::put('posts/{post}', [AutoblogPostController::class, 'update'])->name('posts.update');
+        Route::post('posts/{post}/publish', [AutoblogPostController::class, 'publish'])->name('posts.publish');
+        Route::post('posts/{post}/retry', [AutoblogPostController::class, 'retry'])->name('posts.retry');
+        Route::delete('posts/{post}', [AutoblogPostController::class, 'destroy'])->name('posts.destroy');
+        Route::post('destinations', [AutoblogDestinationController::class, 'store'])->name('destinations.store');
+        Route::get('destination-connections', [AutoblogDestinationController::class, 'index'])->name('destinations.index');
+        Route::post('destinations/{destination}/verify', [AutoblogDestinationController::class, 'verify'])->name('destinations.verify');
+        Route::put('destinations/{destination}', [AutoblogDestinationController::class, 'update'])->name('destinations.update');
+        Route::delete('destinations/{destination}', [AutoblogDestinationController::class, 'destroy'])->name('destinations.destroy');
+        Route::put('settings', [AutoblogSettingsController::class, 'update'])->name('settings.update');
+    });
+
     // ─── Profile ───
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -442,8 +469,11 @@ Route::prefix('superadmin')
     ->middleware(['auth', \App\Http\Middleware\EnsureSuperAdmin::class])
     ->group(function () {
         Route::get('/', [SuperAdmin\DashboardController::class, 'index'])->name('superadmin.dashboard');
+        Route::resource('/users', SuperAdmin\UserController::class)->except(['show'])->names('superadmin.users');
+        Route::resource('/workspaces', SuperAdmin\TenantController::class)
+            ->parameters(['workspaces' => 'tenant'])
+            ->only(['index', 'edit', 'update'])->names('superadmin.tenants');
         Route::get('/settings', [SuperAdmin\SettingsController::class, 'index'])->name('superadmin.settings');
         Route::put('/settings', [SuperAdmin\SettingsController::class, 'update'])->name('superadmin.settings.update');
         Route::resource('/plans', SuperAdmin\PlanController::class)->names('superadmin.plans');
     });
-

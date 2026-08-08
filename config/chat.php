@@ -32,7 +32,7 @@ return [
 
     'ai' => [
         'provider' => env('CHAT_AI_PROVIDER', 'null'),
-        'max_tokens' => (int) env('CHAT_AI_MAX_TOKENS', 600),
+        'max_tokens' => (int) env('CHAT_AI_MAX_TOKENS', 8192),
         'openai' => [
             'key' => env('OPENAI_API_KEY'),
             'model' => env('OPENAI_MODEL', 'gpt-4o-mini'),
@@ -46,7 +46,7 @@ return [
         'anthropic' => [
             'key' => env('ANTHROPIC_API_KEY'),
             'model' => env('ANTHROPIC_MODEL', 'claude-sonnet-5'),
-            'max_tokens' => (int) env('CHAT_AI_MAX_TOKENS', 600),
+            'max_tokens' => (int) env('CHAT_AI_MAX_TOKENS', 8192),
             'base_url' => env('ANTHROPIC_BASE_URL', 'https://api.anthropic.com'),
             'version' => '2023-06-01',
         ],

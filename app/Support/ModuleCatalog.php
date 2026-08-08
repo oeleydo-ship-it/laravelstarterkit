@@ -66,6 +66,12 @@ class ModuleCatalog
                 'description' => 'Recent purchase and subscribe notification toasts — live and fake — with reload display limits.',
                 'enabled_by_default' => false,
             ],
+            [
+                'key' => 'autoblog',
+                'name' => 'AI Autoblog',
+                'description' => 'Generate SEO articles with OpenAI or Kimi K3 and publish to WordPress or REST webhooks.',
+                'enabled_by_default' => false,
+            ],
         ];
     }
 

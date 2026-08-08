@@ -3,6 +3,7 @@
 namespace App\Services\Chat\Ai;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Http\Client\ConnectionException;
 use RuntimeException;
 
 /**
@@ -33,22 +34,42 @@ class OpenAiCompatibleAiProvider implements AiProvider
             $messages,
         );
 
-        $response = Http::withToken($this->config['key'])
-            ->acceptJson()
-            ->timeout(45)
-            ->post(rtrim($this->config['base_url'], '/').'/chat/completions', [
-                'model' => $this->config['model'],
-                'max_tokens' => (int) ($this->config['max_tokens'] ?? 600),
-                'messages' => $payloadMessages,
-            ]);
+        try {
+            $request = Http::withToken($this->config['key'])
+                ->acceptJson()->connectTimeout(10)->timeout(75)
+                ->retry(2, 350, throw: false);
+
+            // Avoid broken IPv6 routes on dual-stack Windows/PHP installations.
+            if (defined('CURLOPT_IPRESOLVE') && defined('CURL_IPRESOLVE_V4')) {
+                $request = $request->withOptions([
+                    'curl' => [CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4],
+                ]);
+            }
+
+            $response = $request->post(rtrim($this->config['base_url'], '/').'/chat/completions', [
+                    'model' => $this->config['model'],
+                    'max_tokens' => (int) ($this->config['max_tokens'] ?? 8192),
+                    'messages' => $payloadMessages,
+                ]);
+        } catch (ConnectionException $exception) {
+            throw new RuntimeException('The AI provider could not be reached.', previous: $exception);
+        }
 
         if ($response->failed()) {
-            throw new RuntimeException('The AI provider returned '.$response->status().'.');
+            $detail = data_get($response->json(), 'error.message');
+            throw new RuntimeException('The AI provider returned '.$response->status().($detail ? ': '.$detail : '.'));
         }
 
         $text = data_get($response->json(), 'choices.0.message.content');
 
         if (blank($text)) {
+            $finishReason = data_get($response->json(), 'choices.0.finish_reason');
+            $reasoning = data_get($response->json(), 'choices.0.message.reasoning_content');
+
+            if ($finishReason === 'length' || filled($reasoning)) {
+                throw new RuntimeException('The AI provider exhausted the output token limit before returning the final answer.');
+            }
+
             throw new RuntimeException('The AI provider returned an empty response.');
         }
 

@@ -99,6 +99,7 @@ class ChatInternalNoteTest extends TestCase
         $conversationId = $start->json('conversation_id');
 
         $conversation = ChatConversation::withoutGlobalScopes()->findOrFail($conversationId);
+        $conversation->update(['assigned_to' => $agent->id]);
 
         app(MessageService::class)->sendAsAgent($conversation, $agent, 'Public reply the visitor should see');
         app(MessageService::class)->addInternalNote($conversation, $agent, 'SECRET: escalate to legal');

@@ -63,3 +63,4 @@ Broadcast::channel('tenant.{tenantId}.agents', function ($user, $tenantId) {
 Broadcast::channel('tenant.{tenantId}.inbox', function ($user, $tenantId) {
     return $user instanceof User && (int) $user->tenant_id === (int) $tenantId;
 });
+Broadcast::channel('tenant.{tenantId}.autoblog', fn ($user,$tenantId) => $user instanceof User && (int)$user->tenant_id === (int)$tenantId);

@@ -30,12 +30,18 @@ class SettingsController extends Controller
                 'app_name' => 'required|string|max:255',
                 'support_email' => 'nullable|email|max:255',
                 'footer_text' => 'nullable|string|max:500',
+                'timezone' => 'required|timezone',
+                'currency' => 'required|string|size:3',
+                'allow_registration' => 'nullable|boolean',
                 'app_logo' => 'nullable|image|mimes:jpg,jpeg,png,svg|max:2048',
             ]);
 
             SystemSetting::set('app_name', $request->input('app_name'), 'general');
             SystemSetting::set('support_email', $request->input('support_email'), 'general');
             SystemSetting::set('footer_text', $request->input('footer_text'), 'general');
+            SystemSetting::set('timezone', $request->input('timezone'), 'general');
+            SystemSetting::set('currency', strtoupper($request->input('currency')), 'general');
+            SystemSetting::set('allow_registration', $request->boolean('allow_registration') ? '1' : '0', 'general');
 
             if ($request->hasFile('app_logo')) {
                 // Delete old logo if exists
@@ -57,11 +63,15 @@ class SettingsController extends Controller
                 'stripe_key' => 'nullable|string|max:255',
                 'stripe_secret' => 'nullable|string|max:255',
                 'stripe_webhook_secret' => 'nullable|string|max:255',
+                'stripe_mode' => 'required|in:test,live',
+                'billing_currency' => 'required|string|size:3',
             ]);
 
             SystemSetting::set('stripe_key', $request->input('stripe_key'), 'stripe');
-            SystemSetting::set('stripe_secret', $request->input('stripe_secret'), 'stripe');
-            SystemSetting::set('stripe_webhook_secret', $request->input('stripe_webhook_secret'), 'stripe');
+            if ($request->filled('stripe_secret')) SystemSetting::set('stripe_secret', $request->input('stripe_secret'), 'stripe');
+            if ($request->filled('stripe_webhook_secret')) SystemSetting::set('stripe_webhook_secret', $request->input('stripe_webhook_secret'), 'stripe');
+            SystemSetting::set('stripe_mode', $request->input('stripe_mode'), 'stripe');
+            SystemSetting::set('billing_currency', strtoupper($request->input('billing_currency')), 'stripe');
         }
 
         return redirect()->route('superadmin.settings')

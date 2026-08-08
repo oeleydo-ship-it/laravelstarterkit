@@ -1,73 +1,13 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-
+<html lang="{{ str_replace('_','-',app()->getLocale()) }}">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ config('app.name', 'SaaS Kit') }} — @yield('title', 'Welcome')</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    @vite(['resources/sass/app.scss', 'resources/js/app.js'])
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .auth-card {
-            background: #fff;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            width: 100%;
-            max-width: 440px;
-            padding: 2.5rem;
-        }
-
-        .auth-card .brand {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #1e1b4b;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .btn-primary {
-            background: #4f46e5;
-            border-color: #4f46e5;
-        }
-
-        .btn-primary:hover {
-            background: #4338ca;
-            border-color: #4338ca;
-        }
-    </style>
-</head>
-
-<body>
-    <div class="auth-card">
-        <div class="brand">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2">
-                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-            </svg>
-            {{ config('app.name', 'SaaS Kit') }}
-        </div>
-        @if($errors->any())
-            <div class="alert alert-danger py-2 mb-3" style="font-size:0.875rem;border-radius:10px;">
-                <ul class="mb-0 ps-3">
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-        @yield('content')
-    </div>
-</body>
-
-</html>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="csrf-token" content="{{ csrf_token() }}">
+<title>{{ config('app.name','SaaS Kit') }} — @yield('title','Welcome')</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+@vite(['resources/sass/app.scss','resources/js/app.js'])
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:Inter,sans-serif;background:#070707;color:#f7f7f7}.auth-shell{position:relative;min-height:100vh;display:grid;place-items:center;overflow:hidden;padding:64px 24px}.auth-shell:before,.auth-shell:after{content:"";position:absolute;width:70vw;height:48vw;border-radius:50%;filter:blur(1px);pointer-events:none}.auth-shell:before{right:-25vw;top:-28vw;background:radial-gradient(ellipse at center,#666 0,#292929 36%,#080808 70%);transform:rotate(18deg)}.auth-shell:after{left:-35vw;bottom:-37vw;background:radial-gradient(ellipse at center,#8b8b8b 0,#303030 37%,#080808 72%);transform:rotate(25deg)}.auth-noise{position:absolute;inset:0;opacity:.06;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.7'/%3E%3C/svg%3E")}.home-link{position:absolute;top:28px;left:30px;z-index:2;color:#a1a1aa;text-decoration:none;font-size:.9rem}.home-link:hover{color:#fff}.auth-panel{position:relative;z-index:1;width:100%;max-width:520px}.auth-brand{display:flex;justify-content:center;margin-bottom:24px}.auth-mark{display:grid;place-items:center;width:50px;height:50px;border:1px solid #343434;border-radius:14px;background:rgba(18,18,18,.75);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}.auth-title{text-align:center;font-size:1.75rem;font-weight:700;letter-spacing:-.04em;margin:0 0 8px}.auth-subtitle{text-align:center;color:#97979f;font-size:.93rem;margin-bottom:28px}.auth-subtitle a,.auth-legal a{color:#f5f5f5}.social-btn,.auth-submit{height:50px;border:1px solid #353535;border-radius:13px;background:linear-gradient(180deg,#262626,#1d1d1d);color:#fff;font-weight:600;display:flex;align-items:center;justify-content:center;gap:11px;text-decoration:none;width:100%;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}.social-btn:hover,.auth-submit:hover{background:#303030;color:#fff;border-color:#4a4a4a}.auth-divider{display:flex;align-items:center;gap:16px;color:#888;font-size:.85rem;margin:26px 0}.auth-divider:before,.auth-divider:after{content:"";height:1px;background:#292929;flex:1}.auth-panel .form-label{color:#a9a9b0;font-size:.85rem;margin-bottom:8px}.auth-panel .form-control{height:50px;background:rgba(30,30,30,.9);border:1px solid #393939;border-radius:13px;color:#fff;padding:0 16px;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}.auth-panel .form-control:focus{background:#202020;color:#fff;border-color:#707070;box-shadow:0 0 0 3px rgba(255,255,255,.06)}.auth-panel .form-control::placeholder{color:#64646c}.auth-submit{cursor:pointer;margin-top:8px}.auth-options{display:flex;justify-content:space-between;align-items:center;font-size:.84rem;color:#a1a1aa;margin:18px 0}.auth-options a{color:#d7d7da;text-decoration:none}.auth-legal{text-align:center;color:#777780;font-size:.75rem;line-height:1.6;margin-top:26px}.auth-error{background:rgba(127,29,29,.28);border:1px solid #7f1d1d;color:#fecaca;border-radius:12px;padding:12px 15px;font-size:.84rem;margin-bottom:18px}.password-wrap{position:relative}.password-toggle{position:absolute;right:14px;top:50%;transform:translateY(-50%);border:0;background:none;color:#8d8d95;padding:4px}.password-rules{font-size:.76rem;color:#8d8d95;line-height:1.8;margin-top:8px}.password-rules span{display:block}.password-rules span:before{content:"✓";color:#34d399;margin-right:8px}@media(max-width:600px){.auth-shell{padding:70px 20px 36px}.auth-title{font-size:1.5rem}.auth-shell:before,.auth-shell:after{width:110vw;height:90vw}}
+</style>
+</head><body><main class="auth-shell"><div class="auth-noise"></div><a class="home-link" href="{{ route('landing') }}">‹ Home</a><section class="auth-panel"><div class="auth-brand"><div class="auth-mark">@if(\App\Models\SystemSetting::get('app_logo'))<img src="{{ asset('storage/'.\App\Models\SystemSetting::get('app_logo')) }}" alt="" style="max-width:32px;max-height:32px">@else<svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></svg>@endif</div></div>@if($errors->any())<div class="auth-error">{{ $errors->first() }}</div>@endif @yield('content')</section></main>
+<script>document.addEventListener('click',e=>{const b=e.target.closest('[data-password-toggle]');if(!b)return;const i=document.getElementById(b.dataset.passwordToggle);i.type=i.type==='password'?'text':'password';});</script>
+</body></html>

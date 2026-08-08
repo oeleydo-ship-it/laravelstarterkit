@@ -3,6 +3,11 @@
 @section('title', 'Dashboard')
 
 @section('content')
+    <div class="dashboard-intro">
+        <div class="dashboard-eyebrow">Workspace overview</div>
+        <h2>Good to see you, {{ Str::before(auth()->user()->name, ' ') }}.</h2>
+        <p>Monitor your team, active products, and recent workspace activity from one place.</p>
+    </div>
     <div class="row g-4 mb-4">
         {{-- Total Users Card --}}
         <div class="col-md-4">

@@ -1,42 +1,7 @@
 @extends('layouts.auth')
-
-@section('title', 'Login')
-
+@section('title','Log in')
 @section('content')
-    <h4 class="fw-bold mb-1">Welcome back</h4>
-    <p class="text-muted mb-4">Sign in to your account.</p>
-
-    <form method="POST" action="{{ route('login') }}">
-        @csrf
-
-        <div class="mb-3">
-            <label for="email" class="form-label fw-medium">Email Address</label>
-            <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email"
-                value="{{ old('email') }}" required autocomplete="email" autofocus>
-        </div>
-
-        <div class="mb-3">
-            <label for="password" class="form-label fw-medium">Password</label>
-            <input id="password" type="password" class="form-control @error('password') is-invalid @enderror"
-                name="password" required autocomplete="current-password">
-        </div>
-
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="remember" id="remember" {{ old('remember') ? 'checked' : '' }}>
-                <label class="form-check-label small" for="remember">Remember me</label>
-            </div>
-            @if (Route::has('password.request'))
-                <a class="small text-decoration-none" href="{{ route('password.request') }}">Forgot password?</a>
-            @endif
-        </div>
-
-        <button type="submit" class="btn btn-primary w-100 py-2 fw-medium mb-3">Sign In</button>
-
-        @if (Route::has('register'))
-            <p class="text-center text-muted small mb-0">
-                Don't have an account? <a href="{{ route('register') }}" class="text-decoration-none">Create one</a>
-            </p>
-        @endif
-    </form>
+<h1 class="auth-title">Welcome back</h1><p class="auth-subtitle">New to {{ config('app.name') }}? <a href="{{ route('register') }}">Create an account</a></p>
+<a class="social-btn" href="{{ route('auth.google.redirect') }}"><svg width="19" height="19" viewBox="0 0 24 24"><path fill="#fff" d="M21.6 12.23c0-.71-.06-1.4-.18-2.07H12v3.92h5.38a4.6 4.6 0 0 1-2 3.02v2.54h3.24c1.9-1.75 2.98-4.33 2.98-7.41Z"/><path fill="#fff" opacity=".75" d="M12 22c2.7 0 4.97-.9 6.63-2.36l-3.24-2.54c-.9.6-2.05.96-3.39.96-2.61 0-4.82-1.76-5.61-4.13H3.04v2.62A10 10 0 0 0 12 22Z"/><path fill="#fff" opacity=".55" d="M6.39 13.93A6 6 0 0 1 6.08 12c0-.67.12-1.32.31-1.93V7.45H3.04A10 10 0 0 0 2 12c0 1.61.39 3.13 1.04 4.55l3.35-2.62Z"/><path fill="#fff" opacity=".85" d="M12 5.94c1.47 0 2.79.5 3.82 1.5l2.87-2.87A9.63 9.63 0 0 0 12 2a10 10 0 0 0-8.96 5.45l3.35 2.62C7.18 7.7 9.39 5.94 12 5.94Z"/></svg>Continue with Google</a>
+<div class="auth-divider">or</div><form method="POST" action="{{ route('login') }}">@csrf<div class="mb-3"><label class="form-label" for="email">Email</label><input id="email" type="email" name="email" value="{{ old('email') }}" class="form-control" required autofocus autocomplete="email" placeholder="you@company.com"></div><div class="mb-2"><label class="form-label" for="password">Password</label><div class="password-wrap"><input id="password" type="password" name="password" class="form-control" required autocomplete="current-password"><button type="button" class="password-toggle" data-password-toggle="password" aria-label="Show password">◉</button></div></div><div class="auth-options"><label><input type="checkbox" name="remember" {{ old('remember')?'checked':'' }}> Remember me</label>@if(Route::has('password.request'))<a href="{{ route('password.request') }}">Forgot password?</a>@endif</div><button class="auth-submit" type="submit">Log in</button></form><p class="auth-legal">By continuing, you agree to our <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.</p>
 @endsection

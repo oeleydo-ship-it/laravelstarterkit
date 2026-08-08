@@ -32,7 +32,8 @@
             || ($tenant->isModuleEnabled('forms') && auth()->user()->canAccessModule('forms'))
             || ($tenant->isModuleEnabled('reviews') && auth()->user()->canAccessModule('reviews'))
             || ($tenant->isModuleEnabled('bookings') && auth()->user()->canAccessModule('bookings'))
-            || ($tenant->isModuleEnabled('socialproof') && auth()->user()->canAccessModule('socialproof')))
+            || ($tenant->isModuleEnabled('socialproof') && auth()->user()->canAccessModule('socialproof'))
+            || ($tenant->isModuleEnabled('autoblog') && auth()->user()->canAccessModule('autoblog')))
             <div class="nav-section">
                 <div class="nav-section-title">Modules</div>
 
@@ -128,6 +129,12 @@
                             <circle cx="18" cy="6" r="3" />
                         </svg>
                         Social Proof
+                    </a>
+                @endif
+                @if($tenant->isModuleEnabled('autoblog') && auth()->user()->canAccessModule('autoblog'))
+                    <a href="{{ route('autoblog.dashboard') }}" class="nav-link {{ request()->routeIs('autoblog.*') ? 'active' : '' }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5V4a2 2 0 0 1 2-2h11l3 3v14.5a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 19.5z"/><path d="M8 7h8M8 11h8M8 15h5"/></svg>
+                        AI Autoblog
                     </a>
                 @endif
             </div>
