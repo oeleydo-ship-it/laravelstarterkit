@@ -71,7 +71,9 @@ use App\Http\Controllers\SetupController;
 
 Route::middleware('guest')->group(function () {
     Route::get('/setup', [SetupController::class, 'create'])->name('setup.create');
-    Route::post('/setup', [SetupController::class, 'store'])->name('setup.store');
+    Route::post('/setup', [SetupController::class, 'store'])
+        ->middleware('throttle:5,1')
+        ->name('setup.store');
 });
 
 /*

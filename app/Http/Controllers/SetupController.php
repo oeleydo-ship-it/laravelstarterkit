@@ -18,7 +18,9 @@ class SetupController extends Controller
             return redirect()->route('login');
         }
 
-        return view('setup.create');
+        return view('setup.create', [
+            'setupToken' => $this->makeSetupToken(),
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -26,6 +28,8 @@ class SetupController extends Controller
         if ($this->isInstalled()) {
             return redirect()->route('login');
         }
+
+        abort_unless($this->validSetupToken($request->string('setup_token')->toString()), 419);
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -64,5 +68,26 @@ class SetupController extends Controller
         return User::withoutGlobalScopes()
             ->where('is_superadmin', true)
             ->exists();
+    }
+
+    private function makeSetupToken(): string
+    {
+        $timestamp = (string) now()->timestamp;
+
+        return $timestamp.'.'.hash_hmac('sha256', 'superadmin-setup|'.$timestamp, (string) config('app.key'));
+    }
+
+    private function validSetupToken(string $token): bool
+    {
+        [$timestamp, $signature] = array_pad(explode('.', $token, 2), 2, null);
+
+        if (! ctype_digit((string) $timestamp) || ! is_string($signature)) {
+            return false;
+        }
+
+        $age = now()->timestamp - (int) $timestamp;
+        $expected = hash_hmac('sha256', 'superadmin-setup|'.$timestamp, (string) config('app.key'));
+
+        return $age >= 0 && $age <= 1800 && hash_equals($expected, $signature);
     }
 }

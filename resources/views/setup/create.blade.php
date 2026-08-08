@@ -28,6 +28,7 @@
 
             <form method="POST" action="{{ route('setup.store') }}">
                 @csrf
+                <input type="hidden" name="setup_token" value="{{ $setupToken }}">
                 <div class="mb-3">
                     <label for="name" class="form-label">Full name</label>
                     <input id="name" name="name" class="form-control" value="{{ old('name') }}" required autofocus autocomplete="name">

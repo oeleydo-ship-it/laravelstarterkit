@@ -18,7 +18,11 @@ class SetupTest extends TestCase
 
     public function test_setup_creates_and_logs_in_the_first_superadmin(): void
     {
+        $page = $this->get(route('setup.create'));
+        preg_match('/name="setup_token" value="([^"]+)"/', $page->getContent(), $matches);
+
         $response = $this->post(route('setup.store'), [
+            'setup_token' => $matches[1],
             'name' => 'Site Administrator',
             'email' => 'admin@example.com',
             'password' => 'a-secure-password',
@@ -32,6 +36,19 @@ class SetupTest extends TestCase
         $this->assertNull($admin->role);
         $this->assertAuthenticatedAs($admin);
         $response->assertRedirect(route('superadmin.dashboard'));
+    }
+
+    public function test_setup_rejects_an_invalid_signed_token(): void
+    {
+        $this->post(route('setup.store'), [
+            'setup_token' => 'invalid',
+            'name' => 'Attacker',
+            'email' => 'attacker@example.com',
+            'password' => 'a-secure-password',
+            'password_confirmation' => 'a-secure-password',
+        ])->assertStatus(419);
+
+        $this->assertDatabaseCount('users', 0);
     }
 
     public function test_setup_cannot_create_another_superadmin(): void
