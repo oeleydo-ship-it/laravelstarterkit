@@ -57,6 +57,7 @@ class SuperAdminTest extends TestCase
 
     public function test_non_superadmin_cannot_access_system_management(): void
     {
+        $this->superadmin();
         $tenant = Tenant::factory()->create();
         $user = User::factory()->create(['tenant_id' => $tenant->id, 'is_superadmin' => false]);
         $this->actingAs($user)->get(route('superadmin.dashboard'))->assertForbidden();

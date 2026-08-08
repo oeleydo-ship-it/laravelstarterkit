@@ -61,6 +61,8 @@ class SetupController extends Controller
 
     private function isInstalled(): bool
     {
-        return User::withoutGlobalScopes()->exists();
+        return User::withoutGlobalScopes()
+            ->where('is_superadmin', true)
+            ->exists();
     }
 }

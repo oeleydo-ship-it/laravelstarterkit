@@ -18,10 +18,9 @@ class RequireSuperAdminSetup
             return $next($request);
         }
 
-        // Only an entirely fresh installation may enter web setup. This avoids
-        // exposing account creation on an older database whose administrator
-        // may have been removed intentionally or accidentally.
-        $requiresSetup = ! User::withoutGlobalScopes()->exists();
+        $requiresSetup = ! User::withoutGlobalScopes()
+            ->where('is_superadmin', true)
+            ->exists();
 
         if ($requiresSetup && ! $request->routeIs('setup.*')) {
             return redirect()->route('setup.create');

@@ -42,10 +42,11 @@ class SetupTest extends TestCase
         $this->get('/')->assertOk();
     }
 
-    public function test_setup_is_not_exposed_on_an_existing_installation(): void
+    public function test_existing_installation_without_a_superadmin_requires_setup(): void
     {
         User::factory()->create(['is_superadmin' => false]);
 
-        $this->get(route('setup.create'))->assertRedirect(route('login'));
+        $this->get('/')->assertRedirect(route('setup.create'));
+        $this->get(route('setup.create'))->assertOk();
     }
 }
