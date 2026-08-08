@@ -42,6 +42,9 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use App\Models\SystemSetting;
 use Illuminate\Support\Facades\Schema;
+use App\Services\SuperAdminProvisioner;
+use Illuminate\Database\Events\MigrationsEnded;
+use Illuminate\Support\Facades\Event;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -64,6 +67,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Event::listen(MigrationsEnded::class, function (): void {
+            $this->provisionDeploymentSuperAdmin();
+        });
+
         // Composer package discovery runs before deployment platforms attach the
         // shared database to a fresh release. System settings are optional at
         // this stage, so an unavailable database must not abort the deployment.
@@ -77,6 +84,7 @@ class AppServiceProvider extends ServiceProvider
                     'cashier.webhook.secret' => SystemSetting::get('stripe_webhook_secret', config('cashier.webhook.secret')),
                 ]);
             }
+            $this->provisionDeploymentSuperAdmin();
         } catch (\Throwable) {
             // Keep environment configuration until the database is available.
         }
@@ -149,5 +157,18 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('superadmin', function ($user) {
             return $user->is_superadmin;
         });
+    }
+
+    private function provisionDeploymentSuperAdmin(): void
+    {
+        if (! config('superadmin.auto_provision') || ! Schema::hasTable('users')) {
+            return;
+        }
+
+        app(SuperAdminProvisioner::class)->provision(
+            (string) config('superadmin.name'),
+            (string) config('superadmin.email'),
+            (string) config('superadmin.password'),
+        );
     }
 }
