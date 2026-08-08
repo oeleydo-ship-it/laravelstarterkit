@@ -64,14 +64,21 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if (Schema::hasTable('system_settings')) {
-            config([
-                'app.name' => SystemSetting::get('app_name', config('app.name')),
-                'app.timezone' => SystemSetting::get('timezone', config('app.timezone')),
-                'cashier.key' => SystemSetting::get('stripe_key', config('cashier.key')),
-                'cashier.secret' => SystemSetting::get('stripe_secret', config('cashier.secret')),
-                'cashier.webhook.secret' => SystemSetting::get('stripe_webhook_secret', config('cashier.webhook.secret')),
-            ]);
+        // Composer package discovery runs before deployment platforms attach the
+        // shared database to a fresh release. System settings are optional at
+        // this stage, so an unavailable database must not abort the deployment.
+        try {
+            if (Schema::hasTable('system_settings')) {
+                config([
+                    'app.name' => SystemSetting::get('app_name', config('app.name')),
+                    'app.timezone' => SystemSetting::get('timezone', config('app.timezone')),
+                    'cashier.key' => SystemSetting::get('stripe_key', config('cashier.key')),
+                    'cashier.secret' => SystemSetting::get('stripe_secret', config('cashier.secret')),
+                    'cashier.webhook.secret' => SystemSetting::get('stripe_webhook_secret', config('cashier.webhook.secret')),
+                ]);
+            }
+        } catch (\Throwable) {
+            // Keep environment configuration until the database is available.
         }
         // Register policies
         Gate::policy(Client::class, ClientPolicy::class);
