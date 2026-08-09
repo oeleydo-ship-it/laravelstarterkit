@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\BookingAppointment;
 use App\Models\BookingService;
 use App\Services\Bookings\SiteService;
-use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
@@ -30,6 +29,8 @@ class DashboardController extends Controller
                 ->where('starts_at', '>=', now())
                 ->count(),
             'total' => BookingAppointment::query()->count(),
+            'completed' => BookingAppointment::query()->where('status', BookingAppointment::STATUS_COMPLETED)->count(),
+            'no_show' => BookingAppointment::query()->where('status', BookingAppointment::STATUS_NO_SHOW)->count(),
         ];
 
         $upcoming = BookingAppointment::query()

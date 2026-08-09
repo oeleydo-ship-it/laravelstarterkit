@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Bookings;
 use App\Http\Controllers\Controller;
 use App\Services\Bookings\SiteService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class SettingsController extends Controller
 {
@@ -41,6 +42,7 @@ class SettingsController extends Controller
             'publicUrl' => $this->sites->publicUrl($site),
             'snippet' => $this->sites->embedSnippet($site),
             'widgetSnippet' => $this->sites->widgetSnippet($site),
+            'calendarFeedUrl' => $this->sites->calendarFeedUrl($site),
         ]);
     }
 
@@ -56,9 +58,14 @@ class SettingsController extends Controller
             'widget_position' => ['nullable', 'in:bottom-right,bottom-left,top-right,top-left'],
             'frequency_hours' => ['nullable', 'integer', 'min:0', 'max:8760'],
             'max_displays' => ['nullable', 'integer', 'min:0', 'max:1000'],
+            'minimum_notice_hours' => ['nullable', 'integer', 'min:0', 'max:720'],
+            'maximum_advance_days' => ['nullable', 'integer', 'min:1', 'max:730'],
+            'reminders_enabled' => ['nullable', 'boolean'],
+            'reminder_hours' => ['nullable', 'integer', 'min:1', 'max:168'],
         ]);
 
         $validated['widget_enabled'] = $request->boolean('widget_enabled');
+        $validated['reminders_enabled'] = $request->boolean('reminders_enabled');
 
         $site = $this->sites->defaultFor(currentTenant());
         $this->sites->saveSettings($site, $validated);
@@ -74,5 +81,13 @@ class SettingsController extends Controller
         return redirect()
             ->route('bookings.install')
             ->with('success', 'Booking link key rotated. Share the new URL.');
+    }
+
+    public function rotateCalendarToken()
+    {
+        $site = $this->sites->defaultFor(currentTenant());
+        $site->update(['calendar_token' => Str::random(48)]);
+
+        return back()->with('success', 'Calendar feed URL rotated. Reconnect subscriptions using the new URL.');
     }
 }

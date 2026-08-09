@@ -15,6 +15,7 @@ class BookingSite extends Model
     protected $fillable = [
         'tenant_id',
         'public_key',
+        'calendar_token',
         'name',
         'timezone',
         'allowed_origins',

@@ -12,7 +12,7 @@
 - **Notes:** {{ $appointment->notes }}
 @endif
 
-<x-mail::button :url="url('/bookings/appointments')">
+<x-mail::button :url="route('bookings.appointments.show', $appointment)">
 View appointments
 </x-mail::button>
 

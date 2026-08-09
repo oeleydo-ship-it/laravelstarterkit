@@ -33,6 +33,31 @@ class SuperAdminTest extends TestCase
         $this->actingAs($admin)->get(route('superadmin.tenants.index'))->assertOk();
         $this->actingAs($admin)->get(route('superadmin.settings'))->assertOk();
         $this->actingAs($admin)->get(route('superadmin.plans.index'))->assertOk();
+        $this->actingAs($admin)->get(route('superadmin.modules.index'))->assertOk();
+    }
+
+    public function test_superadmin_can_hide_and_disable_a_module_for_all_tenants(): void
+    {
+        $admin = $this->superadmin();
+        $tenant = Tenant::factory()->create();
+        $user = User::factory()->create(['tenant_id' => $tenant->id, 'role' => 'owner']);
+        $module = Module::where('key', 'tickets')->firstOrFail();
+        TenantModule::updateOrCreate(
+            ['tenant_id' => $tenant->id, 'module_key' => 'tickets'],
+            ['enabled' => true],
+        );
+
+        $this->actingAs($admin)->put(route('superadmin.modules.update', $module), [
+            'name' => $module->name,
+            'description' => $module->description,
+            'is_active' => '0',
+            'is_visible' => '0',
+            'enabled_by_default' => '0',
+        ])->assertRedirect();
+
+        $this->assertFalse($tenant->fresh()->isModuleEnabled('tickets'));
+        $this->actingAs($user)->get(route('tickets.index'))->assertRedirect(route('dashboard'));
+        $this->actingAs($user)->get(route('modules.index'))->assertOk()->assertDontSee('Support Tickets');
     }
 
     public function test_superadmin_can_manage_a_workspace_plan_and_modules(): void

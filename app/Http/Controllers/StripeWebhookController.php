@@ -3,11 +3,22 @@
 namespace App\Http\Controllers;
 
 use App\Models\Plan;
-use Illuminate\Http\Request;
+use App\Services\Bookings\BookingPaymentService;
 use Laravel\Cashier\Http\Controllers\WebhookController as CashierWebhookController;
 
 class StripeWebhookController extends CashierWebhookController
 {
+    public function handleCheckoutSessionCompleted(array $payload): void
+    {
+        $session = $payload['data']['object'] ?? [];
+        if (($session['payment_status'] ?? null) === 'paid' && filled($session['id'] ?? null)) {
+            app(BookingPaymentService::class)->markPaid(
+                $session['id'],
+                (int) ($session['metadata']['booking_appointment_id'] ?? 0),
+            );
+        }
+    }
+
     /**
      * Handle customer subscription updated.
      */

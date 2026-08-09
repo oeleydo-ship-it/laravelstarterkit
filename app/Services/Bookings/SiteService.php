@@ -4,6 +4,7 @@ namespace App\Services\Bookings;
 
 use App\Models\BookingSite;
 use App\Models\Tenant;
+use Illuminate\Support\Str;
 
 class SiteService
 {
@@ -15,12 +16,17 @@ class SiteService
             ->first();
 
         if ($site) {
+            if (blank($site->calendar_token)) {
+                $site->update(['calendar_token' => Str::random(48)]);
+            }
+
             return $site;
         }
 
         return BookingSite::withoutGlobalScopes()->create([
             'tenant_id' => $tenant->id,
             'public_key' => BookingSite::generatePublicKey(),
+            'calendar_token' => Str::random(48),
             'name' => 'Bookings',
             'timezone' => config('app.timezone', 'UTC'),
             'allowed_origins' => [],
@@ -55,6 +61,10 @@ class SiteService
             : 'bottom-right';
         $settings['max_displays'] = max(0, min(1000, (int) ($data['max_displays'] ?? 0)));
         $settings['frequency_hours'] = max(0, min(8760, (int) ($data['frequency_hours'] ?? 24)));
+        $settings['minimum_notice_hours'] = max(0, min(720, (int) ($data['minimum_notice_hours'] ?? 1)));
+        $settings['maximum_advance_days'] = max(1, min(730, (int) ($data['maximum_advance_days'] ?? 90)));
+        $settings['reminders_enabled'] = (bool) ($data['reminders_enabled'] ?? false);
+        $settings['reminder_hours'] = max(1, min(168, (int) ($data['reminder_hours'] ?? 24)));
 
         $site->update([
             'name' => $data['name'] ?? $site->name,
@@ -83,5 +93,10 @@ class SiteService
         $src = htmlspecialchars(url('/b/'.$site->public_key.'.js'), ENT_QUOTES, 'UTF-8');
 
         return '<script src="'.$src.'" async></script>';
+    }
+
+    public function calendarFeedUrl(BookingSite $site): string
+    {
+        return url('/calendar/bookings/'.$site->calendar_token.'.ics');
     }
 }

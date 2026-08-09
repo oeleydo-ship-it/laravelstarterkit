@@ -7,13 +7,15 @@
 
     <h4 class="fw-bold mb-3">Appointments</h4>
 
-    <form method="GET" class="mb-3">
+    <form method="GET" class="mb-3 d-flex gap-2">
+        <input name="q" class="form-control form-control-sm" style="max-width:280px" value="{{ request('q') }}" placeholder="Search guest name or email">
         <select name="status" class="form-select form-select-sm" style="max-width:180px" onchange="this.form.submit()">
             <option value="">All statuses</option>
             @foreach(App\Models\BookingAppointment::statuses() as $value => $label)
                 <option value="{{ $value }}" @selected(request('status') === $value)>{{ $label }}</option>
             @endforeach
         </select>
+        <button class="btn btn-sm btn-outline-secondary">Search</button>
     </form>
 
     <div class="table-card">
@@ -44,6 +46,7 @@
                         </td>
                         <td><span class="badge {{ $row->statusBadgeClass() }}">{{ $row->statusLabel() }}</span></td>
                         <td class="text-end">
+                            <a href="{{ route('bookings.appointments.show', $row) }}" class="btn btn-sm btn-outline-primary">View</a>
                             @can('update', $row)
                                 <form method="POST" action="{{ route('bookings.appointments.status', $row) }}" class="d-inline">
                                     @csrf @method('PUT')

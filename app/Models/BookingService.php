@@ -17,8 +17,13 @@ class BookingService extends Model
         'booking_site_id',
         'name',
         'description',
+        'location_type',
+        'location_details',
         'duration_minutes',
         'buffer_minutes',
+        'price_cents',
+        'currency',
+        'requires_payment',
         'color',
         'active',
         'sort_order',
@@ -29,6 +34,8 @@ class BookingService extends Model
         return [
             'duration_minutes' => 'integer',
             'buffer_minutes' => 'integer',
+            'price_cents' => 'integer',
+            'requires_payment' => 'boolean',
             'active' => 'boolean',
             'sort_order' => 'integer',
         ];

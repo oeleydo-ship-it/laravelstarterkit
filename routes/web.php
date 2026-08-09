@@ -18,6 +18,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\SuperAdmin;
+use App\Http\Controllers\SuperAdmin\ModuleController as SuperAdminModuleController;
 use App\Http\Controllers\Chat\ArticleController as ChatArticleController;
 use App\Http\Controllers\Chat\AssistController as ChatAssistController;
 use App\Http\Controllers\Chat\AttachmentController as ChatAttachmentController;
@@ -59,6 +60,7 @@ use App\Http\Controllers\Bookings\AvailabilityController as BookingsAvailability
 use App\Http\Controllers\Bookings\AppointmentController as BookingsAppointmentController;
 use App\Http\Controllers\Bookings\SettingsController as BookingsSettingsController;
 use App\Http\Controllers\Bookings\PublicController as BookingsPublicController;
+use App\Http\Controllers\Bookings\CalendarController as BookingsCalendarController;
 use App\Http\Controllers\SocialProof\DashboardController as SocialProofDashboardController;
 use App\Http\Controllers\SocialProof\EmbedController as SocialProofEmbedController;
 use App\Http\Controllers\SocialProof\EventController as SocialProofEventController;
@@ -336,11 +338,14 @@ Route::middleware(['auth', \App\Http\Middleware\SetTenant::class])->group(functi
         Route::post('availability/exceptions', [BookingsAvailabilityController::class, 'storeException'])->name('availability.exceptions.store');
         Route::delete('availability/exceptions/{exception}', [BookingsAvailabilityController::class, 'destroyException'])->name('availability.exceptions.destroy');
         Route::get('appointments', [BookingsAppointmentController::class, 'index'])->name('appointments.index');
+        Route::get('appointments/{appointment}', [BookingsAppointmentController::class, 'show'])->name('appointments.show');
+        Route::put('appointments/{appointment}', [BookingsAppointmentController::class, 'update'])->name('appointments.update');
         Route::put('appointments/{appointment}/status', [BookingsAppointmentController::class, 'updateStatus'])->name('appointments.status');
         Route::get('install', [BookingsSettingsController::class, 'install'])->name('install');
         Route::get('settings', [BookingsSettingsController::class, 'index'])->name('settings');
         Route::put('settings', [BookingsSettingsController::class, 'update'])->name('settings.update');
         Route::post('settings/rotate', [BookingsSettingsController::class, 'rotateKey'])->name('settings.rotate');
+        Route::post('settings/rotate-calendar', [BookingsSettingsController::class, 'rotateCalendarToken'])->name('settings.rotate-calendar');
     });
 
     // Social Proof Module
@@ -387,6 +392,7 @@ Route::prefix('widget/{tenantSlug}')
     ->middleware([
         'throttle:60,1',
         \App\Http\Middleware\SetTenantFromSlug::class,
+        \App\Http\Middleware\EnsurePublicModuleEnabled::class.':chat',
         \App\Http\Middleware\AllowChatWidgetFraming::class,
     ])
     ->name('chat.widget.')
@@ -414,6 +420,7 @@ Route::prefix('x/{siteKey}')
     ->middleware([
         'throttle:120,1',
         \App\Http\Middleware\SetTenantFromEngageSiteKey::class,
+        \App\Http\Middleware\EnsurePublicModuleEnabled::class.':engage',
         \App\Http\Middleware\AllowPublicFraming::class,
     ])
     ->where(['siteKey' => '[A-Za-z0-9]+'])
@@ -428,26 +435,27 @@ Route::get('/x/{siteKey}.js', [EngageEmbedController::class, 'boot'])
     ->middleware([
         'throttle:120,1',
         \App\Http\Middleware\SetTenantFromEngageSiteKey::class,
+        \App\Http\Middleware\EnsurePublicModuleEnabled::class.':engage',
         \App\Http\Middleware\AllowPublicFraming::class,
     ])
     ->where(['siteKey' => '[A-Za-z0-9]+']);
 
 // White-label public form embed.
-Route::prefix('f/{siteKey}')->middleware(['throttle:120,1', \App\Http\Middleware\SetTenantFromFormSiteKey::class, \App\Http\Middleware\AllowPublicFraming::class])->where(['siteKey' => '[A-Za-z0-9]+'])->group(function () {
+Route::prefix('f/{siteKey}')->middleware(['throttle:120,1', \App\Http\Middleware\SetTenantFromFormSiteKey::class, \App\Http\Middleware\EnsurePublicModuleEnabled::class.':forms', \App\Http\Middleware\AllowPublicFraming::class])->where(['siteKey' => '[A-Za-z0-9]+'])->group(function () {
     Route::options('{any?}', [FormsEmbedController::class, 'preflight'])->where('any', '.*');
     Route::get('c', [FormsEmbedController::class, 'config']);
     Route::post('s', [FormsEmbedController::class, 'submit']);
 });
-Route::get('/f/{siteKey}.js', [FormsEmbedController::class, 'boot'])->middleware(['throttle:120,1', \App\Http\Middleware\SetTenantFromFormSiteKey::class, \App\Http\Middleware\AllowPublicFraming::class])->where(['siteKey' => '[A-Za-z0-9]+']);
+Route::get('/f/{siteKey}.js', [FormsEmbedController::class, 'boot'])->middleware(['throttle:120,1', \App\Http\Middleware\SetTenantFromFormSiteKey::class, \App\Http\Middleware\EnsurePublicModuleEnabled::class.':forms', \App\Http\Middleware\AllowPublicFraming::class])->where(['siteKey' => '[A-Za-z0-9]+']);
 
 // White-label reviews embed and public submission routes.
-Route::prefix('r/{siteKey}')->middleware(['throttle:120,1', \App\Http\Middleware\SetTenantFromReviewSiteKey::class, \App\Http\Middleware\AllowPublicFraming::class])->where(['siteKey' => '[A-Za-z0-9]+'])->group(function () {
+Route::prefix('r/{siteKey}')->middleware(['throttle:120,1', \App\Http\Middleware\SetTenantFromReviewSiteKey::class, \App\Http\Middleware\EnsurePublicModuleEnabled::class.':reviews', \App\Http\Middleware\AllowPublicFraming::class])->where(['siteKey' => '[A-Za-z0-9]+'])->group(function () {
     Route::get('c', [ReviewsEmbedController::class, 'config']);
     Route::post('s', [ReviewsEmbedController::class, 'submit']);
     Route::get('write', [ReviewsEmbedController::class, 'write'])->name('reviews.write');
 });
 Route::get('/r/{siteKey}.js', [ReviewsEmbedController::class, 'boot'])
-    ->middleware(['throttle:120,1', \App\Http\Middleware\SetTenantFromReviewSiteKey::class, \App\Http\Middleware\AllowPublicFraming::class])
+    ->middleware(['throttle:120,1', \App\Http\Middleware\SetTenantFromReviewSiteKey::class, \App\Http\Middleware\EnsurePublicModuleEnabled::class.':reviews', \App\Http\Middleware\AllowPublicFraming::class])
     ->where(['siteKey' => '[A-Za-z0-9]+']);
 
 // Public booking page + site widget loader
@@ -455,14 +463,20 @@ Route::get('/b/{siteKey}.js', [BookingsPublicController::class, 'boot'])
     ->middleware([
         'throttle:120,1',
         \App\Http\Middleware\SetTenantFromBookingSiteKey::class,
+        \App\Http\Middleware\EnsurePublicModuleEnabled::class.':bookings',
         \App\Http\Middleware\AllowPublicFraming::class,
     ])
     ->where(['siteKey' => '[A-Za-z0-9]+']);
+
+Route::get('/calendar/bookings/{token}.ics', [BookingsCalendarController::class, 'feed'])
+    ->where(['token' => '[A-Za-z0-9]+'])
+    ->name('bookings.calendar.feed');
 
 Route::prefix('b/{siteKey}')
     ->middleware([
         'throttle:60,1',
         \App\Http\Middleware\SetTenantFromBookingSiteKey::class,
+        \App\Http\Middleware\EnsurePublicModuleEnabled::class.':bookings',
         \App\Http\Middleware\AllowPublicFraming::class,
     ])
     ->where(['siteKey' => '[A-Za-z0-9]+'])
@@ -470,16 +484,22 @@ Route::prefix('b/{siteKey}')
         Route::get('/', [BookingsPublicController::class, 'show']);
         Route::get('slots', [BookingsPublicController::class, 'slots']);
         Route::post('book', [BookingsPublicController::class, 'book']);
+        Route::get('payment/success', [BookingsPublicController::class, 'paymentSuccess'])->name('bookings.public.payment.success');
+        Route::post('manage/{code}/payment', [BookingsPublicController::class, 'retryPayment'])->name('bookings.public.payment.retry');
+        Route::get('manage/{code}', [BookingsPublicController::class, 'manage'])->name('bookings.public.manage');
+        Route::post('manage/{code}/cancel', [BookingsPublicController::class, 'cancel'])->name('bookings.public.cancel');
+        Route::post('manage/{code}/reschedule', [BookingsPublicController::class, 'reschedule'])->name('bookings.public.reschedule');
+        Route::get('manage/{code}/calendar.ics', [BookingsPublicController::class, 'calendar'])->name('bookings.public.calendar');
     });
 
 // White-label social proof purchase / subscribe toasts
-Route::prefix('sp/{siteKey}')->middleware(['throttle:120,1', \App\Http\Middleware\SetTenantFromSocialProofSiteKey::class, \App\Http\Middleware\AllowPublicFraming::class])->where(['siteKey' => '[A-Za-z0-9]+'])->group(function () {
+Route::prefix('sp/{siteKey}')->middleware(['throttle:120,1', \App\Http\Middleware\SetTenantFromSocialProofSiteKey::class, \App\Http\Middleware\EnsurePublicModuleEnabled::class.':socialproof', \App\Http\Middleware\AllowPublicFraming::class])->where(['siteKey' => '[A-Za-z0-9]+'])->group(function () {
     Route::options('{any?}', [SocialProofEmbedController::class, 'preflight'])->where('any', '.*');
     Route::get('c', [SocialProofEmbedController::class, 'config']);
     Route::post('e', [SocialProofEmbedController::class, 'ingest']);
 });
 Route::get('/sp/{siteKey}.js', [SocialProofEmbedController::class, 'boot'])
-    ->middleware(['throttle:120,1', \App\Http\Middleware\SetTenantFromSocialProofSiteKey::class, \App\Http\Middleware\AllowPublicFraming::class])
+    ->middleware(['throttle:120,1', \App\Http\Middleware\SetTenantFromSocialProofSiteKey::class, \App\Http\Middleware\EnsurePublicModuleEnabled::class.':socialproof', \App\Http\Middleware\AllowPublicFraming::class])
     ->where(['siteKey' => '[A-Za-z0-9]+']);
 
 /*
@@ -499,4 +519,6 @@ Route::prefix('superadmin')
         Route::get('/settings', [SuperAdmin\SettingsController::class, 'index'])->name('superadmin.settings');
         Route::put('/settings', [SuperAdmin\SettingsController::class, 'update'])->name('superadmin.settings.update');
         Route::resource('/plans', SuperAdmin\PlanController::class)->names('superadmin.plans');
+        Route::get('/modules', [SuperAdminModuleController::class, 'index'])->name('superadmin.modules.index');
+        Route::put('/modules/{module}', [SuperAdminModuleController::class, 'update'])->name('superadmin.modules.update');
     });

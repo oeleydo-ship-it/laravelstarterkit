@@ -15,7 +15,7 @@ class ModuleController extends Controller
         ModuleCatalog::sync();
 
         $tenant = currentTenant();
-        $modules = Module::query()->orderBy('name')->get();
+        $modules = Module::query()->available()->orderBy('name')->get();
         $tenantModules = $tenant->tenantModules()->pluck('enabled', 'module_key');
 
         // Create missing tenant_module rows so toggles have a stable baseline.
@@ -46,6 +46,7 @@ class ModuleController extends Controller
         ]);
 
         $tenant = currentTenant();
+        $module = Module::where('key', $request->module_key)->available()->firstOrFail();
 
         // Check plan limits for max_modules when enabling
         if ($request->enabled) {

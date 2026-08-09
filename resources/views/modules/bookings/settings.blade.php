@@ -32,6 +32,11 @@
         </div>
 
         <hr class="my-4">
+        <h6 class="fw-bold">Booking window</h6>
+        <div class="row g-3 mb-4"><div class="col-md-4"><label class="form-label">Minimum notice (hours)</label><input type="number" name="minimum_notice_hours" class="form-control" min="0" max="720" required value="{{ old('minimum_notice_hours', $s['minimum_notice_hours'] ?? 1) }}"><div class="form-text">Prevents last-minute bookings.</div></div><div class="col-md-4"><label class="form-label">Book up to (days ahead)</label><input type="number" name="maximum_advance_days" class="form-control" min="1" max="730" required value="{{ old('maximum_advance_days', $s['maximum_advance_days'] ?? 90) }}"></div></div>
+        <div class="row g-3 mb-4"><div class="col-md-4 d-flex align-items-end"><div class="form-check form-switch mb-2"><input type="hidden" name="reminders_enabled" value="0"><input class="form-check-input" type="checkbox" name="reminders_enabled" value="1" id="reminders_enabled" @checked(old('reminders_enabled', $s['reminders_enabled'] ?? false))><label class="form-check-label" for="reminders_enabled">Email guest reminders</label></div></div><div class="col-md-4"><label class="form-label">Reminder lead time (hours)</label><input type="number" name="reminder_hours" class="form-control" min="1" max="168" value="{{ old('reminder_hours', $s['reminder_hours'] ?? 24) }}"></div></div>
+
+        <hr class="my-4">
         <h6 class="fw-bold">Frequency on external site</h6>
         <p class="text-muted small">Floating Book button on your website — control how often each visitor sees it.</p>
         <div class="row g-3">

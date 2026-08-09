@@ -24,6 +24,13 @@
         <pre class="bg-dark text-white rounded p-3 small">{{ $widgetSnippet }}</pre>
     </div>
 
+    <div class="table-card mb-4">
+        <h6 class="fw-bold mb-2">Google / Outlook calendar subscription</h6>
+        <p class="text-muted small">Subscribe to this private ICS URL in Google Calendar, Outlook, or Apple Calendar. Updates follow the calendar provider's refresh schedule.</p>
+        <input class="form-control font-monospace user-select-all" readonly value="{{ $calendarFeedUrl }}">
+        <form method="POST" action="{{ route('bookings.settings.rotate-calendar') }}" class="mt-3" onsubmit="return confirm('Existing calendar subscriptions will stop updating. Rotate?')">@csrf<button class="btn btn-sm btn-outline-danger">Rotate calendar URL</button></form>
+    </div>
+
     <div class="table-card">
         <h6 class="fw-bold mb-3">Public key</h6>
         <code class="user-select-all">{{ $site->public_key }}</code>

@@ -26,6 +26,8 @@
                 <label class="form-label">Description</label>
                 <textarea name="description" class="form-control" rows="2">{{ old('description', $service->description) }}</textarea>
             </div>
+            <div class="col-md-4"><label class="form-label">Location type</label><select name="location_type" class="form-select" required>@foreach(['online'=>'Online meeting','phone'=>'Phone call','in_person'=>'In person','custom'=>'Custom'] as $value=>$label)<option value="{{ $value }}" @selected(old('location_type', $service->location_type ?? 'online')===$value)>{{ $label }}</option>@endforeach</select></div>
+            <div class="col-md-8"><label class="form-label">Location or meeting instructions</label><input name="location_details" class="form-control" maxlength="500" value="{{ old('location_details', $service->location_details) }}" placeholder="Meeting URL, address, or instructions"></div>
             <div class="col-md-3">
                 <label class="form-label">Duration (min)</label>
                 <input type="number" name="duration_minutes" class="form-control" min="5" value="{{ old('duration_minutes', $service->duration_minutes ?? 30) }}" required>
@@ -44,6 +46,9 @@
                     <label class="form-check-label" for="active">Active</label>
                 </div>
             </div>
+            <div class="col-md-3"><label class="form-label">Price</label><input type="number" step="0.01" min="0" name="price" class="form-control" value="{{ old('price', number_format(($service->price_cents ?? 0) / 100, 2, '.', '')) }}"></div>
+            <div class="col-md-3"><label class="form-label">Currency</label><input name="currency" maxlength="3" class="form-control text-uppercase" value="{{ old('currency', $service->currency ?? 'USD') }}" required></div>
+            <div class="col-md-6 d-flex align-items-end"><div class="form-check mb-2"><input type="hidden" name="requires_payment" value="0"><input type="checkbox" name="requires_payment" value="1" class="form-check-input" id="requires_payment" @checked(old('requires_payment', $service->requires_payment ?? false))><label class="form-check-label" for="requires_payment">Require Stripe payment before confirming</label></div></div>
         </div>
 
         <div class="d-flex justify-content-between mt-4">

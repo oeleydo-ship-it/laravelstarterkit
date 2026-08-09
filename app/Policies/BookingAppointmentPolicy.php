@@ -20,4 +20,12 @@ class BookingAppointmentPolicy
         return $user->tenant_id === $appointment->tenant_id
             && ($user->hasPrivilege(Privileges::BOOKINGS_MANAGE) || $user->isOwnerOrAdmin());
     }
+
+    public function view(User $user, BookingAppointment $appointment): bool
+    {
+        return $user->tenant_id === $appointment->tenant_id
+            && ($user->hasPrivilege(Privileges::BOOKINGS_VIEW)
+                || $user->hasPrivilege(Privileges::BOOKINGS_MANAGE)
+                || $user->isOwnerOrAdmin());
+    }
 }

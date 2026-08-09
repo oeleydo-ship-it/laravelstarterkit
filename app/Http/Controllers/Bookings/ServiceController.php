@@ -71,14 +71,23 @@ class ServiceController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:160'],
             'description' => ['nullable', 'string', 'max:2000'],
+            'location_type' => ['required', 'in:online,phone,in_person,custom'],
+            'location_details' => ['nullable', 'string', 'max:500'],
             'duration_minutes' => ['required', 'integer', 'min:5', 'max:480'],
             'buffer_minutes' => ['nullable', 'integer', 'min:0', 'max:240'],
+            'price' => ['nullable', 'numeric', 'min:0', 'max:999999'],
+            'currency' => ['required', 'string', 'size:3'],
+            'requires_payment' => ['nullable', 'boolean'],
             'color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'active' => ['nullable', 'boolean'],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:1000'],
         ]);
 
         $data['buffer_minutes'] = (int) ($data['buffer_minutes'] ?? 0);
+        $data['price_cents'] = (int) round(((float) ($data['price'] ?? 0)) * 100);
+        unset($data['price']);
+        $data['currency'] = strtoupper($data['currency']);
+        $data['requires_payment'] = $request->boolean('requires_payment') && $data['price_cents'] > 0;
         $data['active'] = $request->boolean('active');
         $data['sort_order'] = (int) ($data['sort_order'] ?? 0);
         $data['color'] = $data['color'] ?? '#0f766e';

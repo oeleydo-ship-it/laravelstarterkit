@@ -18,6 +18,7 @@ class TenantController extends Controller
         $tenants = Tenant::with('plan')->withCount('users')
             ->when($request->filled('search'), fn ($q) => $q->where('name', 'like', '%'.$request->search.'%'))
             ->latest()->paginate(20)->withQueryString();
+
         return view('superadmin.tenants.index', compact('tenants'));
     }
 
@@ -25,10 +26,11 @@ class TenantController extends Controller
     {
         ModuleCatalog::sync();
         $tenant->load('tenantModules');
+
         return view('superadmin.tenants.edit', [
             'tenant' => $tenant,
             'plans' => Plan::orderBy('sort_order')->get(),
-            'modules' => Module::orderBy('name')->get(),
+            'modules' => Module::available()->orderBy('name')->get(),
             'enabledModules' => $tenant->tenantModules->where('enabled', true)->pluck('module_key')->all(),
         ]);
     }
@@ -45,9 +47,10 @@ class TenantController extends Controller
         ]);
         $tenant->update(collect($data)->only(['name', 'slug', 'plan_id', 'trial_ends_at'])->all());
         $enabled = $data['modules'] ?? [];
-        foreach (Module::pluck('key') as $key) {
+        foreach (Module::available()->pluck('key') as $key) {
             TenantModule::updateOrCreate(['tenant_id' => $tenant->id, 'module_key' => $key], ['enabled' => in_array($key, $enabled, true)]);
         }
+
         return back()->with('success', 'Workspace and module controls updated successfully.');
     }
 }

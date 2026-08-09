@@ -261,6 +261,10 @@
                 </svg>
                 Plans
             </a>
+            <a href="{{ route('superadmin.modules.index') }}"
+                class="nav-link {{ request()->routeIs('superadmin.modules.*') ? 'active' : '' }}">
+                Modules
+            </a>
             <a href="{{ route('superadmin.settings') }}"
                 class="nav-link {{ request()->routeIs('superadmin.settings*') ? 'active' : '' }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

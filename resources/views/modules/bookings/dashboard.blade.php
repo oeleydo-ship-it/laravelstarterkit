@@ -18,8 +18,10 @@
             ['Active services', $stats['services']],
             ['Upcoming', $stats['upcoming']],
             ['All appointments', $stats['total']],
+            ['Completed', $stats['completed']],
+            ['No shows', $stats['no_show']],
         ] as [$label, $value])
-            <div class="col-md-4">
+            <div class="col-md">
                 <div class="card stat-card h-100">
                     <div class="card-body">
                         <div class="text-muted small">{{ $label }}</div>

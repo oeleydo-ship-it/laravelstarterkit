@@ -101,13 +101,26 @@ class Tenant extends Model
         return $this->hasMany(ChatApiToken::class);
     }
 
-    public function autoblogPosts() { return $this->hasMany(AutoblogPost::class); }
-    public function autoblogDestinations() { return $this->hasMany(AutoblogDestination::class); }
+    public function autoblogPosts()
+    {
+        return $this->hasMany(AutoblogPost::class);
+    }
+
+    public function autoblogDestinations()
+    {
+        return $this->hasMany(AutoblogDestination::class);
+    }
 
     // ─── Helpers ───
 
     public function isModuleEnabled(string $moduleKey): bool
     {
+        $available = Module::where('key', $moduleKey)->available()->exists();
+
+        if (! $available) {
+            return false;
+        }
+
         return $this->tenantModules()
             ->where('module_key', $moduleKey)
             ->where('enabled', true)
@@ -116,7 +129,7 @@ class Tenant extends Model
 
     public function getPlanLimit(string $key, $default = null)
     {
-        if (!$this->plan) {
+        if (! $this->plan) {
             return $default;
         }
 

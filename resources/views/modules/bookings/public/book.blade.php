@@ -53,13 +53,14 @@
                     <option value="">Choose…</option>
                     @foreach($services as $service)
                         <option value="{{ $service->id }}" @selected(old('service_id') == $service->id)>
-                            {{ $service->name }} ({{ $service->duration_minutes }} min)
+                            {{ $service->name }} ({{ $service->duration_minutes }} min){{ $service->location_type ? ' · '.str_replace('_', ' ', ucfirst($service->location_type)) : '' }}
+                            @if($service->requires_payment && $service->price_cents > 0) — {{ strtoupper($service->currency) }} {{ number_format($service->price_cents / 100, 2) }}@endif
                         </option>
                     @endforeach
                 </select>
 
                 <label>Date</label>
-                <input type="date" id="date" min="{{ now($site->timezone)->toDateString() }}"
+                <input type="date" id="date" min="{{ now($site->timezone)->toDateString() }}" max="{{ now($site->timezone)->addDays((int) (($site->settings['maximum_advance_days'] ?? 90)))->toDateString() }}"
                        value="{{ old('date') }}" required>
 
                 <label>Available times</label>
