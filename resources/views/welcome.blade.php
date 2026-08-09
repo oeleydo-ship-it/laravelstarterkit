@@ -1,129 +1,61 @@
-<!DOCTYPE html>
-<html lang="en">
+@extends('layouts.marketing')
 
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ config('app.name', 'SaaS Kit') }} — Build Your SaaS Faster</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
-    @vite(['resources/sass/app.scss', 'resources/js/app.js'])
-</head>
+@section('title', 'Turn every visitor into a customer')
 
-<body class="landing-page">
-    @php $brand = config('app.name', 'SaaS Kit'); @endphp
-
-    <nav class="landing-nav">
-        <div class="container landing-nav__inner">
-            <a class="brand-mark" href="/">
-                <span class="brand-mark__glyph" aria-hidden="true">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-                    </svg>
-                </span>
-                {{ $brand }}
-            </a>
-            <div class="landing-nav__links">
-                <a href="{{ route('pricing') }}">Pricing</a>
-                @auth
-                    <a href="{{ route('dashboard') }}" class="landing-nav__cta">Dashboard</a>
-                @else
-                    <a href="{{ route('login') }}">Login</a>
-                    <a href="{{ route('register') }}" class="landing-nav__cta">Get Started</a>
-                @endauth
+@section('content')
+<main>
+    <section class="marketing-hero">
+        <div class="container marketing-hero__grid">
+            <div class="marketing-hero__copy">
+                <span class="eyebrow"><i></i> One workspace. Eight growth tools.</span>
+                <h1>Turn website traffic into <em>real growth.</em></h1>
+                <p>Capture leads, talk to visitors, collect reviews, book meetings, and follow up automatically—without stitching together a dozen apps.</p>
+                <div class="hero-actions">
+                    <a href="{{ auth()->check() ? route('dashboard') : route('register') }}" class="button button--primary">{{ auth()->check() ? 'Open workspace' : 'Start building free' }} <span>→</span></a>
+                    <a href="{{ route('features') }}" class="button button--secondary">Explore the platform</a>
+                </div>
+                <div class="hero-proof"><span>✓ No credit card</span><span>✓ Setup in minutes</span><span>✓ Cancel anytime</span></div>
             </div>
-        </div>
-    </nav>
-
-    <section class="landing-hero">
-        <div class="container">
-            <div class="landing-hero__grid">
-                <div class="landing-hero__copy">
-                    <p class="landing-hero__brand">
-                        {{ $brand }}
-                        <span>built to ship.</span>
-                    </p>
-                    <h1 class="landing-hero__headline">Launch a multi-tenant SaaS without months of boilerplate.</h1>
-                    <p class="landing-hero__lede">
-                        Billing, teams, modules, and admin tools — wired up so you can focus on the product.
-                    </p>
-                    <div class="landing-hero__actions">
-                        @auth
-                            <a href="{{ route('dashboard') }}" class="btn-landing btn-landing--primary">Open Dashboard</a>
-                        @else
-                            <a href="{{ route('register') }}" class="btn-landing btn-landing--primary">Start Free</a>
-                        @endauth
-                        <a href="{{ route('pricing') }}" class="btn-landing btn-landing--ghost">View Pricing</a>
-                    </div>
-                </div>
-
-                <div class="hero-stage" aria-hidden="true">
-                    <div class="hero-stage__glow"></div>
-                    <div class="hero-stage__frame">
-                        <div class="hero-stage__chrome">
-                            <span class="hero-stage__dot"></span>
-                            <span class="hero-stage__dot"></span>
-                            <span class="hero-stage__dot"></span>
-                        </div>
-                        <div class="hero-stage__body">
-                            <div class="hero-stage__rail">
-                                <span></span><span></span><span></span><span></span><span></span>
+            <div class="product-scene" aria-label="Product dashboard preview">
+                <div class="product-window">
+                    <div class="window-bar"><span></span><span></span><span></span><small>Growth overview</small></div>
+                    <div class="dashboard-shell">
+                        <aside><b>◈</b><i></i><i></i><i></i><i></i><i></i></aside>
+                        <div class="dashboard-content">
+                            <div class="dash-heading"><div><small>THIS MONTH</small><strong>Your growth engine</strong></div><button>+ New campaign</button></div>
+                            <div class="metric-grid">
+                                <div><small>New leads</small><b>1,284</b><span>↑ 24%</span></div>
+                                <div><small>Conversations</small><b>438</b><span>↑ 18%</span></div>
+                                <div><small>Bookings</small><b>96</b><span>↑ 31%</span></div>
                             </div>
-                            <div class="hero-stage__main">
-                                <div class="hero-stage__bar"></div>
-                                <div class="hero-stage__rows">
-                                    <div class="hero-stage__row"></div>
-                                    <div class="hero-stage__row"></div>
-                                    <div class="hero-stage__row"></div>
-                                </div>
-                                <div class="hero-stage__stats">
-                                    <div class="hero-stage__stat"></div>
-                                    <div class="hero-stage__stat"></div>
-                                    <div class="hero-stage__stat"></div>
-                                </div>
-                            </div>
+                            <div class="chart-card"><div class="chart-bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+                            <div class="activity-row"><span class="activity-icon">●</span><p><b>New lead captured</b><small>Pricing page · just now</small></p><strong>Qualified</strong></div>
                         </div>
                     </div>
                 </div>
+                <div class="floating-card floating-card--chat"><b>● Live chat</b><span>3 conversations waiting</span></div>
+                <div class="floating-card floating-card--review"><span>★★★★★</span><b>New 5-star review</b></div>
             </div>
         </div>
     </section>
 
-    <section class="landing-features">
+    <section class="trust-strip"><div class="container"><span>BUILT FOR TEAMS THAT WANT TO GROW</span><div><b>Agencies</b><b>SaaS teams</b><b>Consultants</b><b>Local businesses</b><b>Creators</b></div></div></section>
+
+    <section class="section feature-overview" id="platform">
         <div class="container">
-            <div class="landing-features__intro">
-                <h2>Everything you need to run tenants</h2>
-                <p>Core SaaS primitives, ready to extend with your own modules.</p>
+            <div class="section-heading section-heading--split"><div><span class="eyebrow eyebrow--dark">THE COMPLETE TOOLKIT</span><h2>Every customer touchpoint.<br><em>Finally connected.</em></h2></div><p>Replace scattered subscriptions with one focused platform that follows your customer from first click to loyal advocate.</p></div>
+            <div class="bento-grid">
+                <article class="bento-card bento-card--large"><span class="card-number">01</span><div class="module-icon">↗</div><h3>Live chat that knows your business</h3><p>Turn questions into conversations with a branded widget, team inbox, saved replies, knowledge base, and real-time reporting.</p><div class="mini-chat"><div><i></i><p><b>Sarah</b><span>Can you help me choose a plan?</span></p></div><div class="mini-reply">Absolutely—what size is your team?</div></div></article>
+                <article class="bento-card"><span class="card-number">02</span><div class="module-icon module-icon--gold">✦</div><h3>Capture intent</h3><p>Smart popups and campaigns that appear at the right moment—not every moment.</p><span class="text-link">Engage visitors →</span></article>
+                <article class="bento-card"><span class="card-number">03</span><div class="module-icon module-icon--coral">⌁</div><h3>Build forms fast</h3><p>Launch lead, contact, survey, and custom forms. Track every submission in one place.</p><span class="text-link">Collect better data →</span></article>
+                <article class="bento-card bento-card--wide"><span class="card-number">04</span><div><div class="module-icon module-icon--blue">✉</div><h3>Email that continues the conversation</h3><p>Segment subscribers, build campaigns from templates, and understand opens, clicks, and conversions.</p><span class="text-link">Nurture your audience →</span></div><div class="email-visual"><span>Campaign performance</span><b>68.4%</b><small>OPEN RATE</small><div><i style="width:68%"></i></div></div></article>
             </div>
-
-            @php
-                $features = [
-                    ['title' => 'Multi-Tenant', 'desc' => 'Workspace isolation from day one. Each team gets their own scoped data.'],
-                    ['title' => 'Stripe Billing', 'desc' => 'Subscriptions, plan upgrades, downgrades, and billing portal built-in.'],
-                    ['title' => 'Team & RBAC', 'desc' => 'Invite members, assign roles (Owner, Admin, Member), manage permissions.'],
-                    ['title' => 'Modular Architecture', 'desc' => 'Enable or disable feature modules per tenant. Pay for what you use.'],
-                    ['title' => 'Settings System', 'desc' => 'Tenant-scoped and global settings with logo upload and timezone support.'],
-                    ['title' => 'Admin Dashboard', 'desc' => 'Analytics widgets, activity logs, and a polished Bootstrap 5 UI.'],
-                ];
-            @endphp
-
-            <div class="feature-list">
-                @foreach($features as $f)
-                    <div class="feature-list__item">
-                        <h3 class="feature-list__title">{{ $f['title'] }}</h3>
-                        <p class="feature-list__desc">{{ $f['desc'] }}</p>
-                    </div>
-                @endforeach
-            </div>
+            <div class="center-action"><a href="{{ route('features') }}" class="button button--ink">See all eight modules <span>→</span></a></div>
         </div>
     </section>
 
-    <footer class="landing-footer">
-        <div class="container">
-            &copy; {{ date('Y') }} {{ $brand }}. All rights reserved.
-        </div>
-    </footer>
-</body>
+    <section class="workflow-section"><div class="container workflow-grid"><div><span class="eyebrow">ONE CUSTOMER JOURNEY</span><h2>From anonymous click<br>to loyal customer.</h2><p>Your tools share one workspace, so your team sees the full story—not fragments spread across tabs.</p><a href="{{ route('register') }}" class="button button--light">Build your growth stack →</a></div><ol><li><span>01</span><div><b>Attract</b><p>Publish helpful content automatically with Autoblog.</p></div></li><li><span>02</span><div><b>Convert</b><p>Capture attention with Engage campaigns and Forms.</p></div></li><li><span>03</span><div><b>Connect</b><p>Answer questions in Live Chat and nurture with Email.</p></div></li><li><span>04</span><div><b>Grow</b><p>Book appointments, collect Reviews, and show Social Proof.</p></div></li></ol></div></section>
 
-</html>
+    <section class="section final-cta"><div class="container"><div class="final-cta__card"><span class="eyebrow">START TODAY</span><h2>Less software.<br><em>More momentum.</em></h2><p>Give your team one place to turn attention into lasting customer relationships.</p><a href="{{ route('register') }}" class="button button--primary">Create your workspace <span>→</span></a></div></div></section>
+</main>
+@endsection

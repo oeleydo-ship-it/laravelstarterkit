@@ -87,6 +87,15 @@ Route::get('/', function () {
     return view('welcome');
 })->name('landing');
 
+Route::view('/features', 'features')->name('features');
+
+Route::get('/features/{module}', function (string $module) {
+    $details = config("marketing_modules.{$module}");
+    abort_unless($details, 404);
+
+    return view('module', compact('module', 'details'));
+})->name('modules.show');
+
 Route::get('/pricing', function () {
     $plans = Plan::where('is_active', true)->orderBy('sort_order')->get();
     return view('pricing', compact('plans'));
