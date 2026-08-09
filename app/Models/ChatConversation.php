@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ChatConversation extends Model
 {
-    use HasFactory, BelongsToTenant, SoftDeletes;
+    use BelongsToTenant, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'tenant_id',
@@ -66,6 +66,11 @@ class ChatConversation extends Model
     public function messages()
     {
         return $this->hasMany(ChatMessage::class)->orderBy('created_at');
+    }
+
+    public function tickets()
+    {
+        return $this->hasMany(Ticket::class);
     }
 
     public function scopeOpen($query)

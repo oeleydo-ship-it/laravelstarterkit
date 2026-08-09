@@ -12,6 +12,10 @@ class RequireSuperAdminSetup
 {
     public function handle(Request $request, Closure $next): Response
     {
+        if (! config('setup.required')) {
+            return $next($request);
+        }
+
         // Artisan/package discovery may boot the HTTP stack before migrations.
         // In that case Laravel's normal error handling should remain in charge.
         if (! Schema::hasTable('users')) {

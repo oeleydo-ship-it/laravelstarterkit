@@ -10,6 +10,12 @@ class SetupTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        config(['setup.required' => true]);
+    }
+
     public function test_fresh_install_redirects_visitors_to_superadmin_setup(): void
     {
         $this->get('/')->assertRedirect(route('setup.create'));

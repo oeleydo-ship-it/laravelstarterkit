@@ -5,7 +5,7 @@
 @section('content')
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 class="fw-bold mb-0">Support Tickets</h4>
-        <a href="{{ route('tickets.create') }}" class="btn btn-primary">+ New Ticket</a>
+        <div class="d-flex gap-2"><a href="{{ route('tickets.settings') }}" class="btn btn-outline-secondary">Settings</a><a href="{{ route('tickets.create') }}" class="btn btn-primary">+ New Ticket</a></div>
     </div>
 
     {{-- Filters --}}

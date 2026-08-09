@@ -23,7 +23,9 @@ class TicketPolicy
 
     public function create(User $user): bool
     {
-        return $user->hasPrivilege(Privileges::TICKETS_MANAGE) || $user->isOwnerOrAdmin();
+        return $user->hasPrivilege(Privileges::TICKETS_MANAGE)
+            || $user->isOwnerOrAdmin()
+            || $user->canActAsChatAgent();
     }
 
     public function update(User $user, Ticket $ticket): bool

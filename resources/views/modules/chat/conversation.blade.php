@@ -92,6 +92,19 @@
                 </div>
 
                 <div class="chat-desk__actions">
+                    @if($conversation->tickets->isNotEmpty())
+                        <a class="btn btn-sm btn-outline-secondary" href="{{ route('tickets.show', $conversation->tickets->first()) }}">View ticket</a>
+                    @else
+                        <a class="btn btn-sm btn-outline-primary" href="{{ route('tickets.create', ['conversation' => $conversation->id]) }}">Create ticket</a>
+                        @if($ticketSettings['ai_creation_enabled'] && $aiAvailable)
+                            <form method="POST" action="{{ route('chat.conversations.ticket.store', $conversation) }}">
+                                @csrf
+                                <input type="hidden" name="mode" value="ai">
+                                <button class="btn btn-sm btn-outline-primary" onclick="this.disabled=true; this.form.submit();">AI create ticket</button>
+                            </form>
+                        @endif
+                    @endif
+
                     @if($conversation->status === 'open' && $isUnassigned)
                         <form method="POST" action="{{ route('chat.conversations.update', $conversation) }}">
                             @csrf

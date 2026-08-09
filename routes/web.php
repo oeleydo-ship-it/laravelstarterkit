@@ -13,6 +13,7 @@ use App\Http\Controllers\InviteController;
 use App\Http\Controllers\WorkspaceTeamController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\TicketController;
+use App\Http\Controllers\TicketSettingsController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\Auth\GoogleController;
@@ -198,6 +199,9 @@ Route::middleware(['auth', \App\Http\Middleware\SetTenant::class])->group(functi
 
     // Tickets Module
     Route::middleware([\App\Http\Middleware\EnsureModuleEnabled::class . ':tickets'])->group(function () {
+        Route::get('tickets/settings', [TicketSettingsController::class, 'edit'])->name('tickets.settings');
+        Route::put('tickets/settings', [TicketSettingsController::class, 'update'])->name('tickets.settings.update');
+        Route::post('tickets/{ticket}/replies', [TicketController::class, 'reply'])->name('tickets.replies.store');
         Route::resource('tickets', TicketController::class);
     });
 
@@ -213,6 +217,7 @@ Route::middleware(['auth', \App\Http\Middleware\SetTenant::class])->group(functi
         Route::post('conversations/{conversation}/read', [ChatMessageController::class, 'read'])->name('conversations.read');
         Route::post('conversations/{conversation}/typing', [ChatMessageController::class, 'typing'])->name('conversations.typing');
         Route::put('conversations/{conversation}/transfer', [ChatConversationController::class, 'transfer'])->name('conversations.transfer');
+        Route::post('conversations/{conversation}/ticket', [TicketController::class, 'fromConversation'])->name('conversations.ticket.store');
 
         Route::post('conversations/{conversation}/suggest', [ChatAssistController::class, 'suggest'])->name('conversations.suggest');
 

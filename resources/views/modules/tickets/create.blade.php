@@ -11,18 +11,22 @@
 
                 <form method="POST" action="{{ route('tickets.store') }}">
                     @csrf
+                    @if($ticket->chat_conversation_id)
+                        <input type="hidden" name="chat_conversation_id" value="{{ $ticket->chat_conversation_id }}">
+                        <div class="alert alert-info">This ticket will be linked to live chat #{{ $ticket->chat_conversation_id }}.</div>
+                    @endif
 
                     <div class="mb-3">
                         <label for="title" class="form-label fw-medium">Title *</label>
                         <input type="text" class="form-control @error('title') is-invalid @enderror"
-                               id="title" name="title" value="{{ old('title') }}" required>
+                               id="title" name="title" value="{{ old('title', $ticket->title) }}" required>
                         @error('title') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="mb-3">
                         <label for="description" class="form-label fw-medium">Description</label>
                         <textarea class="form-control @error('description') is-invalid @enderror"
-                                  id="description" name="description" rows="4">{{ old('description') }}</textarea>
+                                  id="description" name="description" rows="6">{{ old('description', $ticket->description) }}</textarea>
                         @error('description') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
@@ -31,7 +35,7 @@
                             <label for="priority" class="form-label fw-medium">Priority *</label>
                             <select class="form-select @error('priority') is-invalid @enderror" id="priority" name="priority" required>
                                 @foreach(['low', 'medium', 'high', 'urgent'] as $p)
-                                    <option value="{{ $p }}" {{ old('priority', 'medium') === $p ? 'selected' : '' }}>{{ ucfirst($p) }}</option>
+                                    <option value="{{ $p }}" {{ old('priority', $ticket->priority) === $p ? 'selected' : '' }}>{{ ucfirst($p) }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -50,12 +54,18 @@
                             <select class="form-select @error('assigned_to') is-invalid @enderror" id="assigned_to" name="assigned_to">
                                 <option value="">Unassigned</option>
                                 @foreach($users as $user)
-                                    <option value="{{ $user->id }}" {{ old('assigned_to') == $user->id ? 'selected' : '' }}>
+                                    <option value="{{ $user->id }}" {{ old('assigned_to', $ticket->assigned_to) == $user->id ? 'selected' : '' }}>
                                         {{ $user->name }}
                                     </option>
                                 @endforeach
                             </select>
                         </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4"><label class="form-label">Requester name</label><input class="form-control" name="requester_name" value="{{ old('requester_name', $ticket->requester_name) }}"></div>
+                        <div class="col-md-4"><label class="form-label">Requester email</label><input class="form-control" type="email" name="requester_email" value="{{ old('requester_email', $ticket->requester_email) }}"></div>
+                        <div class="col-md-4"><label class="form-label">Category</label><input class="form-control" name="category" value="{{ old('category', $ticket->category) }}" placeholder="Billing, Bug, Question…"></div>
                     </div>
 
                     <div class="d-flex gap-2">

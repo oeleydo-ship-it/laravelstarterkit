@@ -79,11 +79,12 @@ class ConversationController extends Controller
 
     public function show(ChatConversation $conversation)
     {
-        $conversation->load(['visitor.client', 'assignee', 'messages.sender', 'messages.attachment']);
+        $conversation->load(['visitor.client', 'assignee', 'messages.sender', 'messages.attachment', 'tickets']);
 
         $users = User::chatAgents()->orderBy('name')->get();
         $cannedResponses = ChatCannedResponse::orderBy('title')->get();
         $aiAvailable = app(AiAssistService::class)->isAvailable(currentTenant());
+        $ticketSettings = app(\App\Services\TicketSettingsService::class)->for(currentTenant());
 
         $sidebarConversations = ChatConversation::with(['visitor', 'assignee'])
             ->open()
@@ -99,6 +100,7 @@ class ConversationController extends Controller
             'users',
             'cannedResponses',
             'aiAvailable',
+            'ticketSettings',
             'sidebarConversations',
         ));
     }
@@ -118,7 +120,8 @@ class ConversationController extends Controller
 
     public function update(UpdateChatConversationRequest $request, ChatConversation $conversation)
     {
-        match ($request->validated('action')) {
+        $action = $request->validated('action');
+        match ($action) {
             'assign' => $this->conversations->assign($conversation, User::findOrFail($request->validated('assigned_to'))),
             'unassign' => $this->conversations->assign($conversation, null),
             'accept' => $this->conversations->assign($conversation, $request->user()),
@@ -126,7 +129,21 @@ class ConversationController extends Controller
             'reopen' => $this->conversations->reopen($conversation),
         };
 
-        $message = match ($request->validated('action')) {
+        if ($action === 'close') {
+            $settings = app(\App\Services\TicketSettingsService::class)->for(currentTenant());
+            if ($settings['ai_creation_enabled'] && $settings['ai_auto_create_on_close'] && ! $conversation->tickets()->exists()) {
+                try {
+                    app(\App\Services\TicketFromConversationService::class)->createByAi($conversation);
+                } catch (\Throwable $exception) {
+                    \Illuminate\Support\Facades\Log::warning('Automatic chat ticket creation failed', [
+                        'conversation_id' => $conversation->id,
+                        'error' => $exception->getMessage(),
+                    ]);
+                }
+            }
+        }
+
+        $message = match ($action) {
             'accept' => 'Chat accepted. You can now reply to the visitor.',
             default => 'Conversation updated.',
         };
