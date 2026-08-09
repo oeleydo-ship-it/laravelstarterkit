@@ -74,6 +74,23 @@ class TicketWorkflowTest extends TestCase
         ]);
     }
 
+    public function test_agent_can_update_status_without_editing_the_ticket(): void
+    {
+        [$tenant, $agent] = $this->context();
+        $ticket = Ticket::create([
+            'tenant_id' => $tenant->id,
+            'title' => 'Quick update',
+            'priority' => 'medium',
+            'status' => 'open',
+        ]);
+
+        $this->actingAs($agent)->patch(route('tickets.status.update', $ticket), ['status' => 'closed'])
+            ->assertRedirect();
+
+        $this->assertSame('closed', $ticket->fresh()->status);
+        $this->assertNotNull($ticket->fresh()->resolved_at);
+    }
+
     public function test_ticket_settings_are_tenant_scoped(): void
     {
         [, $agent] = $this->context();

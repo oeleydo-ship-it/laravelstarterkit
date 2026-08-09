@@ -7,14 +7,15 @@ use App\Models\ChatConversation;
 use App\Models\ChatVisitor;
 use App\Models\Tenant;
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class ConversationService
 {
     public function __construct(
         protected RoutingService $routing,
         protected ChatNotifier $notifier,
-    ) {
-    }
+    ) {}
 
     public function startForVisitor(Tenant $tenant, ChatVisitor $visitor, bool $forceNew = false): ChatConversation
     {
@@ -50,9 +51,8 @@ class ConversationService
         $conversation->setRelation('assignee', $agent);
         $conversation->setRelation('visitor', $visitor);
 
-        broadcast(new ChatConversationUpdated($conversation));
-
-        $this->notifier->conversationStarted($conversation);
+        $this->broadcastUpdate($conversation);
+        $this->notify(fn () => $this->notifier->conversationStarted($conversation), $conversation, 'started');
 
         return $conversation;
     }
@@ -62,9 +62,8 @@ class ConversationService
         $conversation->update(['assigned_to' => $agent?->id]);
         $conversation->setRelation('assignee', $agent);
 
-        $this->notifier->conversationAssigned($conversation, $agent);
-
-        broadcast(new ChatConversationUpdated($conversation->fresh(['assignee'])))->toOthers();
+        $this->notify(fn () => $this->notifier->conversationAssigned($conversation, $agent), $conversation, 'assigned');
+        $this->broadcastUpdate($conversation->fresh(['assignee']), true);
 
         return $conversation;
     }
@@ -90,9 +89,8 @@ class ConversationService
 
         app(MessageService::class)->addInternalNote($conversation, $from, $note);
 
-        $this->notifier->conversationAssigned($conversation, $to, $from);
-
-        broadcast(new ChatConversationUpdated($conversation->fresh(['assignee'])))->toOthers();
+        $this->notify(fn () => $this->notifier->conversationAssigned($conversation, $to, $from), $conversation, 'transferred');
+        $this->broadcastUpdate($conversation->fresh(['assignee']), true);
 
         return $conversation;
     }
@@ -116,9 +114,8 @@ class ConversationService
 
         // Agents watching the thread see the score arrive without a refresh, and
         // it gives integrations a reason to react to a completed chat.
-        broadcast(new ChatConversationUpdated($conversation));
-
-        $this->notifier->conversationRated($conversation);
+        $this->broadcastUpdate($conversation);
+        $this->notify(fn () => $this->notifier->conversationRated($conversation), $conversation, 'rated');
 
         return true;
     }
@@ -127,9 +124,8 @@ class ConversationService
     {
         $conversation->update(['status' => 'closed', 'closed_at' => now()]);
 
-        $this->notifier->conversationClosed($conversation);
-
-        broadcast(new ChatConversationUpdated($conversation))->toOthers();
+        $this->notify(fn () => $this->notifier->conversationClosed($conversation), $conversation, 'closed');
+        $this->broadcastUpdate($conversation, true);
 
         return $conversation;
     }
@@ -138,7 +134,7 @@ class ConversationService
     {
         $conversation->update(['status' => 'open', 'closed_at' => null]);
 
-        broadcast(new ChatConversationUpdated($conversation))->toOthers();
+        $this->broadcastUpdate($conversation, true);
 
         return $conversation;
     }
@@ -153,5 +149,33 @@ class ConversationService
         $conversation->restore();
 
         return $conversation;
+    }
+
+    private function broadcastUpdate(ChatConversation $conversation, bool $toOthers = false): void
+    {
+        try {
+            $broadcast = broadcast(new ChatConversationUpdated($conversation));
+            if ($toOthers) {
+                $broadcast->toOthers();
+            }
+        } catch (Throwable $exception) {
+            Log::warning('Chat realtime update failed', [
+                'conversation_id' => $conversation->id,
+                'error' => $exception->getMessage(),
+            ]);
+        }
+    }
+
+    private function notify(callable $notification, ChatConversation $conversation, string $event): void
+    {
+        try {
+            $notification();
+        } catch (Throwable $exception) {
+            Log::warning('Chat notification dispatch failed', [
+                'conversation_id' => $conversation->id,
+                'event' => $event,
+                'error' => $exception->getMessage(),
+            ]);
+        }
     }
 }

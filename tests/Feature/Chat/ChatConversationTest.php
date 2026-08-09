@@ -10,6 +10,7 @@ use App\Models\ChatVisitor;
 use App\Models\Tenant;
 use App\Models\TenantModule;
 use App\Models\User;
+use App\Services\Chat\ChatNotifier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Tests\TestCase;
@@ -183,6 +184,24 @@ class ChatConversationTest extends TestCase
             ->assertRedirect();
 
         $this->assertEquals($member->id, $conversation->fresh()->assigned_to);
+    }
+
+    public function test_accept_succeeds_when_notification_delivery_fails(): void
+    {
+        Event::fake([ChatConversationUpdated::class]);
+        $tenant = $this->makeTenant();
+        $agent = $this->makeUser($tenant, 'owner');
+        $conversation = $this->makeConversation($tenant);
+
+        $notifier = \Mockery::mock(ChatNotifier::class);
+        $notifier->shouldReceive('conversationAssigned')->once()->andThrow(new \RuntimeException('Queue unavailable'));
+        $this->app->instance(ChatNotifier::class, $notifier);
+
+        $this->actingAs($agent)
+            ->put(route('chat.conversations.update', $conversation), ['action' => 'accept'])
+            ->assertRedirect();
+
+        $this->assertSame($agent->id, $conversation->fresh()->assigned_to);
     }
 
     public function test_agent_can_unassign_a_conversation(): void

@@ -107,6 +107,21 @@ class TicketController extends Controller
         return back()->with('success', $request->boolean('is_internal') ? 'Internal note added.' : 'Reply added.');
     }
 
+    public function updateStatus(Request $request, Ticket $ticket)
+    {
+        $this->authorize('update', $ticket);
+        $validated = $request->validate([
+            'status' => 'required|in:open,in_progress,closed',
+        ]);
+
+        $ticket->update([
+            'status' => $validated['status'],
+            'resolved_at' => $validated['status'] === 'closed' ? ($ticket->resolved_at ?? now()) : null,
+        ]);
+
+        return back()->with('success', 'Ticket status updated.');
+    }
+
     public function fromConversation(Request $request, ChatConversation $conversation, TicketFromConversationService $service)
     {
         $this->authorize('create', Ticket::class);

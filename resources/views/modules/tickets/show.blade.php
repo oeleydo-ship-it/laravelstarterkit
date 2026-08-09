@@ -22,6 +22,16 @@
                             </div>
                         </div>
                         <div class="d-flex gap-2">
+                            <form method="POST" action="{{ route('tickets.status.update', $ticket) }}">
+                                @csrf @method('PATCH')
+                                <label for="quick-status" class="visually-hidden">Update status</label>
+                                <select id="quick-status" name="status" class="form-select form-select-sm"
+                                    onchange="this.disabled=true; this.form.submit();" aria-label="Update ticket status">
+                                    @foreach(['open' => 'Open', 'in_progress' => 'In Progress', 'closed' => 'Closed'] as $value => $label)
+                                        <option value="{{ $value }}" @selected($ticket->status === $value)>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </form>
                             <a href="{{ route('tickets.edit', $ticket) }}" class="btn btn-sm btn-outline-primary">Edit</a>
                             <a href="{{ route('tickets.index') }}" class="btn btn-sm btn-outline-secondary">Back</a>
                         </div>

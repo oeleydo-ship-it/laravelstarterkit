@@ -201,6 +201,7 @@ Route::middleware(['auth', \App\Http\Middleware\SetTenant::class])->group(functi
     Route::middleware([\App\Http\Middleware\EnsureModuleEnabled::class . ':tickets'])->group(function () {
         Route::get('tickets/settings', [TicketSettingsController::class, 'edit'])->name('tickets.settings');
         Route::put('tickets/settings', [TicketSettingsController::class, 'update'])->name('tickets.settings.update');
+        Route::patch('tickets/{ticket}/status', [TicketController::class, 'updateStatus'])->name('tickets.status.update');
         Route::post('tickets/{ticket}/replies', [TicketController::class, 'reply'])->name('tickets.replies.store');
         Route::resource('tickets', TicketController::class);
     });
